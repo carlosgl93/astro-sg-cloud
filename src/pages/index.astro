@@ -1,0 +1,209 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+
+import Hero from '~/components/widgets/Hero.astro';
+import Features from '~/components/widgets/Features.astro';
+import Features2 from '~/components/widgets/Features2.astro';
+import Stats from '~/components/widgets/Stats.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Testimonials from '~/components/widgets/Testimonials.astro';
+
+import { useTranslations } from '~/i18n/translations';
+
+const t = useTranslations('es');
+
+const metadata = {
+  title: 'SG Cloud - Consultoría Tecnológica | Sitios Web, Apps, Soluciones de IA',
+  ignoreTitleTemplate: true,
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Hero Widget ******************* -->
+
+  <Hero
+    actions={[
+      {
+        variant: 'primary',
+        text: t.hero.ctaPrimary,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageHomepage)}`,
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+      { text: t.hero.ctaSecondary, href: '#services' },
+    ]}
+    image={{ src: '~/assets/images/hero-image.png', alt: 'SG Cloud Tech Solutions' }}
+  >
+    <Fragment slot="title">
+      {t.hero.title}
+      <span class="hidden xl:inline">{t.hero.titleFor}</span>
+      <span class="text-accent dark:text-white"> {t.hero.titleBusiness}</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      <span class="hidden sm:inline">
+        <span class="font-semibold">SG Cloud</span>
+        {t.hero.subtitle}
+      </span>
+      <span class="block mb-1 sm:hidden font-bold text-blue-600">{t.hero.subtitleShort}</span>
+      {t.hero.description}
+    </Fragment>
+  </Hero>
+
+  <!-- Features Widget (Services) *************** -->
+
+  <Features
+    id="services"
+    tagline={t.services.tagline}
+    title={t.services.title}
+    subtitle={t.services.subtitle}
+    items={[
+      {
+        title: t.services.website.title,
+        description: t.services.website.description,
+        icon: 'tabler:world',
+      },
+      {
+        title: t.services.apps.title,
+        description: t.services.apps.description,
+        icon: 'tabler:device-mobile',
+      },
+      {
+        title: t.services.scrapers.title,
+        description: t.services.scrapers.description,
+        icon: 'tabler:robot',
+      },
+      {
+        title: t.services.ai.title,
+        description: t.services.ai.description,
+        icon: 'tabler:brain',
+      },
+      {
+        title: t.services.chatbots.title,
+        description: t.services.chatbots.description,
+        icon: 'tabler:message-chatbot',
+      },
+      {
+        title: t.services.fullstack.title,
+        description: t.services.fullstack.description,
+        icon: 'tabler:stack-2',
+      },
+    ]}
+  />
+
+  <!-- Why Choose Us - Features2 Widget ************** -->
+
+  <Features2
+    title={t.whyUs.title}
+    subtitle={t.whyUs.subtitle}
+    tagline={t.whyUs.tagline}
+    items={[
+      {
+        title: t.whyUs.team.title,
+        description: t.whyUs.team.description,
+        icon: 'tabler:users',
+      },
+      {
+        title: t.whyUs.tech.title,
+        description: t.whyUs.tech.description,
+        icon: 'tabler:code',
+      },
+      {
+        title: t.whyUs.performance.title,
+        description: t.whyUs.performance.description,
+        icon: 'tabler:dashboard',
+      },
+      {
+        title: t.whyUs.communication.title,
+        description: t.whyUs.communication.description,
+        icon: 'tabler:phone',
+      },
+      {
+        title: t.whyUs.agile.title,
+        description: t.whyUs.agile.description,
+        icon: 'tabler:git-branch',
+      },
+      {
+        title: t.whyUs.aiSpecialization.title,
+        description: t.whyUs.aiSpecialization.description,
+        icon: 'tabler:bulb',
+      },
+    ]}
+  >
+    <Fragment slot="bg">
+      <div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
+    </Fragment>
+  </Features2>
+
+  <!-- Testimonials Widget ******************* -->
+
+  <Testimonials
+    title={t.testimonials.title}
+    tagline={t.testimonials.tagline}
+    testimonials={[
+      {
+        testimonial: t.testimonials.client1.text,
+        name: t.testimonials.client1.name,
+        job: t.testimonials.client1.role,
+        image: {
+          alt: `${t.testimonials.client1.name} testimonial`,
+        },
+      },
+      {
+        testimonial: t.testimonials.client2.text,
+        name: t.testimonials.client2.name,
+        job: t.testimonials.client2.role,
+        image: {
+          alt: `${t.testimonials.client2.name} testimonial`,
+        },
+      },
+      {
+        testimonial: t.testimonials.client3.text,
+        name: t.testimonials.client3.name,
+        job: t.testimonials.client3.role,
+        image: {
+          alt: `${t.testimonials.client3.name} testimonial`,
+        },
+      },
+    ]}
+  />
+
+  <!-- Stats Widget ****************** -->
+
+  <Stats
+    title={t.stats.title}
+    stats={[
+      { title: t.stats.projects, amount: '50+' },
+      { title: t.stats.clients, amount: '30+' },
+      { title: t.stats.quality, amount: '95%' },
+      { title: t.stats.delivery, amount: '100%' },
+    ]}
+  />
+
+  <!-- CallToAction Widget *********** -->
+
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: t.cta.primaryButton,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        variant: 'secondary',
+        text: t.cta.secondaryButton,
+        href: '/services',
+      },
+    ]}
+  >
+    <Fragment slot="title">
+      {t.cta.title}<br class="block sm:hidden" /><span class="sm:whitespace-nowrap"> {t.cta.titleBreak}</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      {t.cta.subtitle}
+    </Fragment>
+  </CallToAction>
+</Layout>

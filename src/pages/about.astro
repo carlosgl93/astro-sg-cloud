@@ -1,0 +1,205 @@
+---
+import Features2 from '~/components/widgets/Features2.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import Stats from '~/components/widgets/Stats.astro';
+import Layout from '~/layouts/PageLayout.astro';
+import Content from '~/components/widgets/Content.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+
+const metadata = {
+  title: 'About Us - SG Cloud',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Hero Widget ******************* -->
+
+  <Hero
+    tagline="About SG Cloud"
+    image={{
+      src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+      alt: 'Team collaboration',
+    }}
+  >
+    <Fragment slot="title">
+      Building the Future <br />
+      <span class="text-accent dark:text-white"> One Solution at a Time</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      SG Cloud is a tech consultancy born from a passion for modern web technologies and artificial intelligence. We're
+      not just developers - we're problem solvers, innovators, and partners in your digital transformation journey.
+    </Fragment>
+  </Hero>
+
+  <!-- Content Widget - Our Story **************** -->
+
+  <Content
+    isReversed
+    tagline="Our Story"
+    title="How SG Cloud Was Born"
+    items={[
+      {
+        title: 'Founded by Experts',
+        description:
+          'Carlos Gumucio and Benjamin Sepulveda joined forces to create a consultancy that bridges the gap between cutting-edge technology and real business needs.',
+      },
+      {
+        title: 'Modern Approach',
+        description:
+          'We focus on lean, performant solutions using the latest frameworks and technologies - no bloated legacy code.',
+      },
+      {
+        title: 'Client-First Philosophy',
+        description:
+          'Direct communication, transparent processes, and solutions tailored to your specific requirements.',
+      },
+    ]}
+    image={{
+      src: 'https://images.unsplash.com/photo-1531973576160-7125cd663d86?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+      alt: 'Developers working',
+    }}
+  >
+    <Fragment slot="content">
+      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Expertise Meets Innovation</h3>
+      We combine years of full-stack development experience with a forward-thinking approach to technology.
+    </Fragment>
+  </Content>
+
+  <!-- Team Section - Features2 Widget ************** -->
+
+  <Features2
+    title="Meet the Team"
+    tagline="Our Founders"
+    items={[
+      {
+        title: 'Carlos Gumucio',
+        description:
+          'Co-founder & Full-Stack Developer. Expert in modern web frameworks, AI/ML solutions, and cloud architecture. Passionate about building performant, scalable applications.',
+        icon: 'tabler:user',
+      },
+      {
+        title: 'Benjamin Sepulveda',
+        description:
+          'Co-founder & Full-Stack Developer. Specializes in web automation, frontend development, and creating seamless user experiences. Loves turning complex requirements into elegant solutions.',
+        icon: 'tabler:user',
+      },
+    ]}
+  >
+    <Fragment slot="bg">
+      <div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
+    </Fragment>
+  </Features2>
+
+  <!-- Stats Widget ****************** -->
+
+  <Stats
+    title="Our Impact"
+    stats={[
+      { title: 'Years Combined Experience', amount: '15+' },
+      { title: 'Projects Delivered', amount: '50+' },
+      { title: 'Technologies Mastered', amount: '20+' },
+      { title: 'Client Satisfaction', amount: '100%' },
+    ]}
+  />
+
+  <!-- What We Believe - Content Widget **************** -->
+
+  <Content
+    isAfterContent
+    items={[
+      {
+        title: 'Performance First',
+        description:
+          'Every millisecond matters. We build fast, optimized solutions that deliver exceptional user experiences.',
+      },
+      {
+        title: 'Modern Technologies',
+        description:
+          'We stay ahead of the curve, using cutting-edge frameworks and tools that provide the best results.',
+      },
+      {
+        title: 'Transparent Communication',
+        description:
+          'No jargon, no confusion. We explain everything in clear terms and keep you informed every step of the way.',
+      },
+      {
+        title: 'Long-Term Partnerships',
+        description: "We're not just building projects - we're building relationships. Your success is our success.",
+      },
+    ]}
+    image={{
+      src: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+      alt: 'Team values',
+    }}
+  >
+    <Fragment slot="content">
+      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Our Values</h3>
+      What drives us every day
+    </Fragment>
+  </Content>
+
+  <!-- Technologies - Features2 Widget ************** -->
+
+  <Features2
+    title="Technologies We Love"
+    subtitle="We're always learning and adapting to the latest tools and frameworks"
+    tagline="Tech Stack"
+    columns={3}
+    items={[
+      {
+        title: 'Frontend',
+        description: 'Astro, React, Preact, Vue, Next.js, Tailwind CSS',
+        icon: 'tabler:layout-2',
+      },
+      {
+        title: 'Backend',
+        description: 'Node.js, Python, Firebase, PostgreSQL, MongoDB',
+        icon: 'tabler:database',
+      },
+      {
+        title: 'AI/ML',
+        description: 'TensorFlow, PyTorch, OpenAI, LangChain, Hugging Face',
+        icon: 'tabler:brain',
+      },
+      {
+        title: 'Mobile',
+        description: 'PWA, React Native, Ionic, Capacitor',
+        icon: 'tabler:device-mobile',
+      },
+      {
+        title: 'DevOps',
+        description: 'Docker, Firebase, Vercel, GitHub Actions, CI/CD',
+        icon: 'tabler:cloud',
+      },
+      {
+        title: 'Tools',
+        description: 'Git, VS Code, Figma, Postman, Chrome DevTools',
+        icon: 'tabler:tools',
+      },
+    ]}
+  />
+
+  <!-- CallToAction Widget *********** -->
+
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Get in Touch',
+        href: 'https://wa.me/56939242145?text=Hello!%20I%27d%20like%20to%20learn%20more%20about%20SG%20Cloud.',
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        variant: 'secondary',
+        text: 'View Services',
+        href: '/services',
+      },
+    ]}
+  >
+    <Fragment slot="title"> Let's Build Something Amazing </Fragment>
+
+    <Fragment slot="subtitle"> Ready to start your project? We're here to help turn your ideas into reality. </Fragment>
+  </CallToAction>
+</Layout>

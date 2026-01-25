@@ -1,0 +1,94 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Features2 from '~/components/widgets/Features2.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+
+const metadata = {
+  title: 'Contact - SG Cloud',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- HeroText Widget ******************* -->
+
+  <HeroText tagline="Contact" title="Let's Build Something Great Together!" />
+
+  <!-- Contact via WhatsApp CTA ******************* -->
+
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Message us on WhatsApp',
+        href: 'https://wa.me/56939242145?text=Hello!%20I%27m%20interested%20in%20discussing%20a%20project%20with%20SG%20Cloud.',
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+    ]}
+    title="Prefer to chat directly?"
+    subtitle="Click the button below to start a conversation on WhatsApp. We typically respond within a few hours during business hours."
+  />
+
+  <!-- Features2 Widget ************** -->
+
+  <Features2
+    title="Get in Touch"
+    items={[
+      {
+        title: 'WhatsApp',
+        description: 'Direct line to Carlos Gumucio. Fast responses, quick solutions.',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        title: 'Phone',
+        description: '+569 39242145',
+        icon: 'tabler:headset',
+      },
+      {
+        title: 'Email',
+        description: 'contact@sgcloud.cl',
+        icon: 'tabler:mail',
+      },
+      {
+        title: 'Location',
+        description: 'Chile - Working remotely with global clients',
+        icon: 'tabler:map-pin',
+      },
+      {
+        title: 'Business Hours',
+        description: 'Monday - Friday: 9:00 AM - 6:00 PM (Chilean Time)',
+        icon: 'tabler:clock',
+      },
+      {
+        title: 'Response Time',
+        description: 'We typically respond within 2-4 hours during business hours',
+        icon: 'tabler:message-circle',
+      },
+    ]}
+  />
+
+  <!-- Bottom CTA -->
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Start a Conversation',
+        href: 'https://wa.me/56939242145?text=Hello%20SG%20Cloud!%20I%20have%20a%20question%20about%20your%20services.',
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        variant: 'secondary',
+        text: 'View Our Services',
+        href: '/services',
+      },
+    ]}
+  >
+    <Fragment slot="title"> Ready to Start? </Fragment>
+
+    <Fragment slot="subtitle">
+      Let's discuss your project. No commitment required - just a friendly conversation about how we can help.
+    </Fragment>
+  </CallToAction>
+</Layout>

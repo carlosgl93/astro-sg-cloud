@@ -1,0 +1,98 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Features2 from '~/components/widgets/Features2.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+
+import { useTranslations } from '~/i18n/translations';
+
+const t = useTranslations('en');
+
+const metadata = {
+  title: 'Contact - SG Cloud',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- HeroText Widget ******************* -->
+
+  <HeroText tagline={t.contact.tagline} title={t.contact.title} />
+
+  <!-- Contact via WhatsApp CTA ******************* -->
+
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: t.contact.buttonWhatsapp,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+    ]}
+    title={t.contact.preferDirect}
+    subtitle={t.contact.whatsappCta}
+  />
+
+  <!-- Features2 Widget ************** -->
+
+  <Features2
+    title={t.contact.getInTouch}
+    items={[
+      {
+        title: t.contact.whatsappLabel,
+        description: t.contact.whatsappDescription,
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        title: t.contact.phoneLabel,
+        description: '+569 39242145',
+        icon: 'tabler:headset',
+      },
+      {
+        title: t.contact.emailLabel,
+        description: 'contact@sgcloud.cl',
+        icon: 'tabler:mail',
+      },
+      {
+        title: t.contact.locationLabel,
+        description: t.contact.locationValue,
+        icon: 'tabler:map-pin',
+      },
+      {
+        title: t.contact.hoursLabel,
+        description: t.contact.hoursValue,
+        icon: 'tabler:clock',
+      },
+      {
+        title: t.contact.responseLabel,
+        description: t.contact.responseValue,
+        icon: 'tabler:message-circle',
+      },
+    ]}
+  />
+
+  <!-- Bottom CTA -->
+  <CallToAction
+    actions={[
+      {
+        variant: 'primary',
+        text: t.contact.ctaButton,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
+        target: '_blank',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        variant: 'secondary',
+        text: t.contact.ctaServicesButton,
+        href: '/en/services',
+      },
+    ]}
+  >
+    <Fragment slot="title"> {t.contact.ctaTitle} </Fragment>
+
+    <Fragment slot="subtitle">
+      {t.contact.ctaSubtitle}
+    </Fragment>
+  </CallToAction>
+</Layout>
