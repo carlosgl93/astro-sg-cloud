@@ -12,7 +12,7 @@ export const translations = {
       titleFor: 'para',
       titleBusiness: 'tu negocio',
       subtitle:
-        'SG Cloud es una consultoría tecnológica especializada en soluciones web de vanguardia, desarrollo de IA y automatización.',
+        'Somos tu partner tecnológico especializado en soluciones web de vanguardia, desarrollo de IA y automatización.',
       subtitleShort: 'SG Cloud: tu socio tecnológico',
       description:
         'Desde sitios web y aplicaciones hasta chatbots de IA y automatización - construimos soluciones que impulsan tu negocio.',
@@ -94,19 +94,19 @@ export const translations = {
       title: 'Historias de éxito',
       tagline: 'Testimonios de clientes',
       client1: {
-        text: 'Trabajar con SG Cloud fue un cambio radical para nuestro negocio. Nos construyeron un web scraper personalizado que nos ahorra 20 horas de trabajo manual cada semana. Profesional, rápido y exactamente lo que necesitábamos.',
-        name: 'María González',
+        text: 'Trabajar con SG Cloud fue un cambio radical para nuestro negocio. Nos construyeron una web y app movil que nos permite estar sincronizados con mi equipo sobre con la informacion de produccion en tiempo real de nuestra empresa.',
+        name: 'Sebastian Irarrázabal',
         role: 'Gerente de Operaciones',
       },
       client2: {
         text: 'El chatbot de IA que desarrollaron maneja el 70% de nuestras consultas de clientes automáticamente. Nuestro tiempo de respuesta mejoró dramáticamente y la satisfacción del cliente está en su punto más alto.',
-        name: 'Juan Pérez',
-        role: 'CEO, Plataforma E-commerce',
+        name: 'Rodrigo Subercaseaux',
+        role: 'CEO, Cubrejardín',
       },
       client3: {
         text: 'Carlos y Benjamin entregaron el sitio web de nuestra empresa en tiempo récord. Es rápido, hermoso y nuestras tasas de conversión aumentaron un 40%. ¡Altamente recomendado!',
-        name: 'Laura Martínez',
-        role: 'Directora de Marketing',
+        name: 'María de los Angeles Gumucio',
+        role: 'CEO, Gumucio Propiedades',
       },
     },
     stats: {
@@ -153,7 +153,7 @@ export const translations = {
       heroTitle: 'Construyendo el futuro',
       heroTitleHighlight: 'una solución a la vez',
       heroSubtitle:
-        'SG Cloud es una consultoría tecnológica nacida de una pasión por las tecnologías web modernas y la inteligencia artificial. No somos solo desarrolladores - somos solucionadores de problemas, innovadores y socios en tu viaje de transformación digital.',
+        'Somos tu partner tecnológico nacido de una pasión por las tecnologías web modernas y la inteligencia artificial. No somos solo desarrolladores - somos solucionadores de problemas, innovadores y socios en tu viaje de transformación digital.',
       storyTagline: 'Nuestra historia',
       storyTitle: 'Cómo nació SG Cloud',
       storyItem1Title: 'Fundada por expertos',

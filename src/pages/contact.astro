@@ -3,16 +3,19 @@ import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import Features2 from '~/components/widgets/Features2.astro';
 import CallToAction from '~/components/widgets/CallToAction.astro';
+import { useTranslations } from '~/i18n/translations';
+
+const t = useTranslations('es');
 
 const metadata = {
-  title: 'Contact - SG Cloud',
+  title: 'Contacto - SG Cloud',
 };
 ---
 
 <Layout metadata={metadata}>
   <!-- HeroText Widget ******************* -->
 
-  <HeroText tagline="Contact" title="Let's Build Something Great Together!" />
+  <HeroText tagline={t.contact.tagline} title={t.contact.title} />
 
   <!-- Contact via WhatsApp CTA ******************* -->
 
@@ -20,49 +23,49 @@ const metadata = {
     actions={[
       {
         variant: 'primary',
-        text: 'Message us on WhatsApp',
-        href: 'https://wa.me/56939242145?text=Hello!%20I%27m%20interested%20in%20discussing%20a%20project%20with%20SG%20Cloud.',
+        text: t.contact.buttonWhatsapp,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
         target: '_blank',
         icon: 'tabler:brand-whatsapp',
       },
     ]}
-    title="Prefer to chat directly?"
-    subtitle="Click the button below to start a conversation on WhatsApp. We typically respond within a few hours during business hours."
+    title={t.contact.preferDirect}
+    subtitle={t.contact.whatsappCta}
   />
 
   <!-- Features2 Widget ************** -->
 
   <Features2
-    title="Get in Touch"
+    title={t.contact.getInTouch}
     items={[
       {
-        title: 'WhatsApp',
-        description: 'Direct line to Carlos Gumucio. Fast responses, quick solutions.',
+        title: t.contact.whatsappLabel,
+        description: t.contact.whatsappDescription,
         icon: 'tabler:brand-whatsapp',
       },
       {
-        title: 'Phone',
+        title: t.contact.phoneLabel,
         description: '+569 39242145',
         icon: 'tabler:headset',
       },
       {
-        title: 'Email',
+        title: t.contact.emailLabel,
         description: 'contact@sgcloud.cl',
         icon: 'tabler:mail',
       },
       {
-        title: 'Location',
-        description: 'Chile - Working remotely with global clients',
+        title: t.contact.locationLabel,
+        description: t.contact.locationValue,
         icon: 'tabler:map-pin',
       },
       {
-        title: 'Business Hours',
-        description: 'Monday - Friday: 9:00 AM - 6:00 PM (Chilean Time)',
+        title: t.contact.hoursLabel,
+        description: t.contact.hoursValue,
         icon: 'tabler:clock',
       },
       {
-        title: 'Response Time',
-        description: 'We typically respond within 2-4 hours during business hours',
+        title: t.contact.responseLabel,
+        description: t.contact.responseValue,
         icon: 'tabler:message-circle',
       },
     ]}
@@ -73,22 +76,22 @@ const metadata = {
     actions={[
       {
         variant: 'primary',
-        text: 'Start a Conversation',
-        href: 'https://wa.me/56939242145?text=Hello%20SG%20Cloud!%20I%20have%20a%20question%20about%20your%20services.',
+        text: t.contact.ctaButton,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
         target: '_blank',
         icon: 'tabler:brand-whatsapp',
       },
       {
         variant: 'secondary',
-        text: 'View Our Services',
+        text: t.contact.ctaServicesButton,
         href: '/services',
       },
     ]}
   >
-    <Fragment slot="title"> Ready to Start? </Fragment>
+    <Fragment slot="title"> {t.contact.ctaTitle} </Fragment>
 
     <Fragment slot="subtitle">
-      Let's discuss your project. No commitment required - just a friendly conversation about how we can help.
+      {t.contact.ctaSubtitle}
     </Fragment>
   </CallToAction>
 </Layout>

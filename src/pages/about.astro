@@ -5,9 +5,12 @@ import Stats from '~/components/widgets/Stats.astro';
 import Layout from '~/layouts/PageLayout.astro';
 import Content from '~/components/widgets/Content.astro';
 import CallToAction from '~/components/widgets/CallToAction.astro';
+import { useTranslations } from '~/i18n/translations';
+
+const t = useTranslations('es');
 
 const metadata = {
-  title: 'About Us - SG Cloud',
+  title: 'Nosotros - SG Cloud',
 };
 ---
 
@@ -15,20 +18,19 @@ const metadata = {
   <!-- Hero Widget ******************* -->
 
   <Hero
-    tagline="About SG Cloud"
+    tagline={t.about.tagline}
     image={{
       src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
       alt: 'Team collaboration',
     }}
   >
     <Fragment slot="title">
-      Building the Future <br />
-      <span class="text-accent dark:text-white"> One Solution at a Time</span>
+      {t.about.heroTitle} <br />
+      <span class="text-accent dark:text-white"> {t.about.heroTitleHighlight}</span>
     </Fragment>
 
     <Fragment slot="subtitle">
-      SG Cloud is a tech consultancy born from a passion for modern web technologies and artificial intelligence. We're
-      not just developers - we're problem solvers, innovators, and partners in your digital transformation journey.
+      {t.about.heroSubtitle}
     </Fragment>
   </Hero>
 
@@ -36,23 +38,20 @@ const metadata = {
 
   <Content
     isReversed
-    tagline="Our Story"
-    title="How SG Cloud Was Born"
+    tagline={t.about.storyTagline}
+    title={t.about.storyTitle}
     items={[
       {
-        title: 'Founded by Experts',
-        description:
-          'Carlos Gumucio and Benjamin Sepulveda joined forces to create a consultancy that bridges the gap between cutting-edge technology and real business needs.',
+        title: t.about.storyItem1Title,
+        description: t.about.storyItem1Description,
       },
       {
-        title: 'Modern Approach',
-        description:
-          'We focus on lean, performant solutions using the latest frameworks and technologies - no bloated legacy code.',
+        title: t.about.storyItem2Title,
+        description: t.about.storyItem2Description,
       },
       {
-        title: 'Client-First Philosophy',
-        description:
-          'Direct communication, transparent processes, and solutions tailored to your specific requirements.',
+        title: t.about.storyItem3Title,
+        description: t.about.storyItem3Description,
       },
     ]}
     image={{
@@ -61,27 +60,25 @@ const metadata = {
     }}
   >
     <Fragment slot="content">
-      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Expertise Meets Innovation</h3>
-      We combine years of full-stack development experience with a forward-thinking approach to technology.
+      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">{t.about.storyContentTitle}</h3>
+      {t.about.storyContentSubtitle}
     </Fragment>
   </Content>
 
   <!-- Team Section - Features2 Widget ************** -->
 
   <Features2
-    title="Meet the Team"
-    tagline="Our Founders"
+    title={t.about.teamTitle}
+    tagline={t.about.teamTagline}
     items={[
       {
-        title: 'Carlos Gumucio',
-        description:
-          'Co-founder & Full-Stack Developer. Expert in modern web frameworks, AI/ML solutions, and cloud architecture. Passionate about building performant, scalable applications.',
+        title: t.about.carlosTitle,
+        description: t.about.carlosDescription,
         icon: 'tabler:user',
       },
       {
-        title: 'Benjamin Sepulveda',
-        description:
-          'Co-founder & Full-Stack Developer. Specializes in web automation, frontend development, and creating seamless user experiences. Loves turning complex requirements into elegant solutions.',
+        title: t.about.benjaminTitle,
+        description: t.about.benjaminDescription,
         icon: 'tabler:user',
       },
     ]}
@@ -94,12 +91,12 @@ const metadata = {
   <!-- Stats Widget ****************** -->
 
   <Stats
-    title="Our Impact"
+    title={t.about.impactTitle}
     stats={[
-      { title: 'Years Combined Experience', amount: '15+' },
-      { title: 'Projects Delivered', amount: '50+' },
-      { title: 'Technologies Mastered', amount: '20+' },
-      { title: 'Client Satisfaction', amount: '100%' },
+      { title: t.about.impactYears, amount: '15+' },
+      { title: t.about.impactProjects, amount: '50+' },
+      { title: t.about.impactTech, amount: '20+' },
+      { title: t.about.impactSatisfaction, amount: '100%' },
     ]}
   />
 
@@ -109,23 +106,20 @@ const metadata = {
     isAfterContent
     items={[
       {
-        title: 'Performance First',
-        description:
-          'Every millisecond matters. We build fast, optimized solutions that deliver exceptional user experiences.',
+        title: t.about.value1Title,
+        description: t.about.value1Description,
       },
       {
-        title: 'Modern Technologies',
-        description:
-          'We stay ahead of the curve, using cutting-edge frameworks and tools that provide the best results.',
+        title: t.about.value2Title,
+        description: t.about.value2Description,
       },
       {
-        title: 'Transparent Communication',
-        description:
-          'No jargon, no confusion. We explain everything in clear terms and keep you informed every step of the way.',
+        title: t.about.value3Title,
+        description: t.about.value3Description,
       },
       {
-        title: 'Long-Term Partnerships',
-        description: "We're not just building projects - we're building relationships. Your success is our success.",
+        title: t.about.value4Title,
+        description: t.about.value4Description,
       },
     ]}
     image={{
@@ -134,47 +128,47 @@ const metadata = {
     }}
   >
     <Fragment slot="content">
-      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">Our Values</h3>
-      What drives us every day
+      <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">{t.about.valuesTitle}</h3>
+      {t.about.valuesSubtitle}
     </Fragment>
   </Content>
 
   <!-- Technologies - Features2 Widget ************** -->
 
   <Features2
-    title="Technologies We Love"
-    subtitle="We're always learning and adapting to the latest tools and frameworks"
-    tagline="Tech Stack"
+    title={t.about.techTitle}
+    subtitle={t.about.techSubtitle}
+    tagline={t.about.techTagline}
     columns={3}
     items={[
       {
-        title: 'Frontend',
-        description: 'Astro, React, Preact, Vue, Next.js, Tailwind CSS',
+        title: t.about.techFrontend,
+        description: t.about.techFrontendList,
         icon: 'tabler:layout-2',
       },
       {
-        title: 'Backend',
-        description: 'Node.js, Python, Firebase, PostgreSQL, MongoDB',
+        title: t.about.techBackend,
+        description: t.about.techBackendList,
         icon: 'tabler:database',
       },
       {
-        title: 'AI/ML',
-        description: 'TensorFlow, PyTorch, OpenAI, LangChain, Hugging Face',
+        title: t.about.techAI,
+        description: t.about.techAIList,
         icon: 'tabler:brain',
       },
       {
-        title: 'Mobile',
-        description: 'PWA, React Native, Ionic, Capacitor',
+        title: t.about.techMobile,
+        description: t.about.techMobileList,
         icon: 'tabler:device-mobile',
       },
       {
-        title: 'DevOps',
-        description: 'Docker, Firebase, Vercel, GitHub Actions, CI/CD',
+        title: t.about.techDevOps,
+        description: t.about.techDevOpsList,
         icon: 'tabler:cloud',
       },
       {
-        title: 'Tools',
-        description: 'Git, VS Code, Figma, Postman, Chrome DevTools',
+        title: t.about.techTools,
+        description: t.about.techToolsList,
         icon: 'tabler:tools',
       },
     ]}
@@ -186,20 +180,20 @@ const metadata = {
     actions={[
       {
         variant: 'primary',
-        text: 'Get in Touch',
-        href: 'https://wa.me/56939242145?text=Hello!%20I%27d%20like%20to%20learn%20more%20about%20SG%20Cloud.',
+        text: t.about.ctaButton,
+        href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageAbout)}`,
         target: '_blank',
         icon: 'tabler:brand-whatsapp',
       },
       {
         variant: 'secondary',
-        text: 'View Services',
+        text: t.about.ctaServicesButton,
         href: '/services',
       },
     ]}
   >
-    <Fragment slot="title"> Let's Build Something Amazing </Fragment>
+    <Fragment slot="title"> {t.about.ctaTitle} </Fragment>
 
-    <Fragment slot="subtitle"> Ready to start your project? We're here to help turn your ideas into reality. </Fragment>
+    <Fragment slot="subtitle"> {t.about.ctaSubtitle} </Fragment>
   </CallToAction>
 </Layout>
