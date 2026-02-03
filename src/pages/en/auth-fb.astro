@@ -1,0 +1,93 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import FacebookSDK from '~/components/common/FacebookSDK.astro';
+import FacebookSignupButton from '~/components/widgets/FacebookSignupButton';
+import HeroText from '~/components/widgets/HeroText.astro';
+
+const configId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID;
+
+const metadata = {
+  title: 'Connect Facebook Account - SG Cloud',
+  description: 'Link your Facebook Business account with SG Cloud services',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Load Facebook SDK (only on this page) -->
+  <FacebookSDK />
+
+  <HeroText tagline="Integration" title="Connect Your Facebook Business Account" />
+
+  <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-3xl">
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-8">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Authorize WhatsApp Business Connection</h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">
+          Connect your Facebook Business account to enable advanced WhatsApp Business features and Messenger chatbots
+          with SG Cloud.
+        </p>
+
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-8">
+          <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Requested Permissions:</h3>
+          <ul class="text-sm text-blue-800 dark:text-blue-200 text-left space-y-1 max-w-md mx-auto">
+            <li class="flex items-start">
+              <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span><strong>Business Management:</strong> Manage business settings</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span><strong>WhatsApp Business:</strong> Manage and send WhatsApp messages</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span><strong>Messenger:</strong> Manage Messenger messages and conversations</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span><strong>Facebook Pages:</strong> Access to page metadata and engagement</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Preact Component with client:load -->
+      <div class="flex justify-center">
+        <FacebookSignupButton client:load configId={configId} />
+      </div>
+
+      <div class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>
+          By connecting, you agree to our <a href="/en/terms" class="text-blue-600 hover:underline">Terms of Service</a> and
+          <a href="/en/privacy" class="text-blue-600 hover:underline">Privacy Policy</a>
+        </p>
+        <p class="mt-2">
+          Need help? <a href="/en/contact" class="text-blue-600 hover:underline">Contact us</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

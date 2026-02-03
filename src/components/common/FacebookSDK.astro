@@ -1,0 +1,46 @@
+---
+/**
+ * Facebook SDK Loader
+ * Loads the Facebook JavaScript SDK asynchronously on pages that need it.
+ * Only include this component on pages that require Facebook functionality.
+ */
+
+const appId = import.meta.env.PUBLIC_FACEBOOK_APP_ID;
+
+if (!appId) {
+  console.warn('PUBLIC_FACEBOOK_APP_ID is not set. Facebook SDK will not be loaded.');
+}
+---
+
+{
+  appId && (
+    /* prettier-ignore */
+    <script is:inline define:vars={{ appId }}>
+      // Load Facebook SDK manually (async)
+      (function (d, s, id) {
+        const fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        const js = d.createElement(s);
+        js.id = id;
+        js.async = true;
+        js.defer = true;
+        js.crossOrigin = 'anonymous';
+        js.src = 'https://connect.facebook.net/en_US/sdk.js';
+        fjs.parentNode.insertBefore(js, fjs);
+      })(document, 'script', 'facebook-jssdk');
+
+      // Initialize when SDK loads
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: appId,
+          cookie: true,
+          xfbml: true,
+          version: 'v24.0',
+        });
+
+        // Dispatch custom event when FB is ready
+        window.dispatchEvent(new CustomEvent('facebook-sdk-ready'));
+      };
+    </script>
+  )
+}

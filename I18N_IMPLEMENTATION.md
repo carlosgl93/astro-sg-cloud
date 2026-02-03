@@ -3,6 +3,7 @@
 ## Overview
 
 The SG Cloud website now supports two languages:
+
 - **Spanish (es)** - Default language, available at root paths (e.g., `/`, `/services`, `/contact`)
 - **English (en)** - Available at `/en/` prefixed paths (e.g., `/en/`, `/en/services`, `/en/contact`)
 
@@ -27,6 +28,7 @@ i18n: {
 **File:** `src/i18n/translations.ts`
 
 Centralized translation object with all site content in both languages:
+
 - Navigation labels
 - Hero sections
 - Services descriptions
@@ -36,6 +38,7 @@ Centralized translation object with all site content in both languages:
 - WhatsApp messages
 
 **Usage:**
+
 ```typescript
 import { useTranslations } from '~/i18n/translations';
 
@@ -46,12 +49,14 @@ const title = t.hero.title;
 ### 3. Page Structure
 
 #### Spanish Pages (Default)
+
 - `src/pages/index.astro` - Homepage
 - `src/pages/services.astro` - Services (needs update)
 - `src/pages/contact.astro` - Contact (needs update)
 - `src/pages/about.astro` - About (needs update)
 
 #### English Pages
+
 - `src/pages/en/index.astro` - English homepage
 - `src/pages/en/services.astro` - English services
 - `src/pages/en/contact.astro` - English contact
@@ -62,6 +67,7 @@ const title = t.hero.title;
 **Component:** `src/components/common/LanguageSwitcher.tsx`
 
 A Preact interactive component that:
+
 - Detects current language from URL path
 - Shows current language flag and name
 - Provides dropdown to switch languages
@@ -69,10 +75,12 @@ A Preact interactive component that:
 - Integrated in header navigation
 
 **Props:**
+
 - `currentLocale`: 'es' | 'en'
 - `currentPath`: string (current URL path)
 
 **Features:**
+
 - Responsive (shows flag + name on desktop, flag only on mobile)
 - Dark mode support
 - Accessible (keyboard navigation, ARIA labels)
@@ -97,6 +105,7 @@ The helper `getLocalizedPath(path, locale)` automatically adds `/en` prefix for 
 ### 6. Updated Components
 
 **Header.astro** now includes:
+
 - Language switcher component with `client:load` directive
 - Current locale detection from URL
 - Props passed to LanguageSwitcher
@@ -108,12 +117,12 @@ const currentLocale = currentPath.startsWith('/en') ? 'en' : 'es';
 
 ## URL Structure
 
-| Page | Spanish URL | English URL |
-|------|-------------|-------------|
-| Homepage | `/` | `/en/` |
+| Page     | Spanish URL | English URL    |
+| -------- | ----------- | -------------- |
+| Homepage | `/`         | `/en/`         |
 | Services | `/services` | `/en/services` |
-| About | `/about` | `/en/about` |
-| Contact | `/contact` | `/en/contact` |
+| About    | `/about`    | `/en/about`    |
+| Contact  | `/contact`  | `/en/contact`  |
 
 ## Blog Routes
 
@@ -132,10 +141,12 @@ Blog translation will be implemented later if needed.
 WhatsApp messages are pre-filled based on language and page:
 
 **Spanish examples:**
+
 - Homepage: "¡Hola! Estoy interesado en los servicios de SG Cloud."
 - Contact: "¡Hola! Me gustaría discutir un proyecto con SG Cloud."
 
 **English examples:**
+
 - Homepage: "Hello! I'm interested in SG Cloud's services."
 - Contact: "Hello! I'd like to discuss a project with SG Cloud."
 
@@ -153,6 +164,7 @@ const storage = getFirebaseStorage(); // Storage instance
 ```
 
 **Required environment variables** (see `.env.example`):
+
 - `PUBLIC_FIREBASE_API_KEY`
 - `PUBLIC_FIREBASE_AUTH_DOMAIN`
 - `PUBLIC_FIREBASE_PROJECT_ID`
@@ -174,16 +186,19 @@ const storage = getFirebaseStorage(); // Storage instance
 ## Testing
 
 Build the site:
+
 ```bash
 pnpm build
 ```
 
 Check for errors:
+
 ```bash
 pnpm check
 ```
 
 Preview production build:
+
 ```bash
 pnpm preview
 ```

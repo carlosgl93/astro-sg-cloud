@@ -8,34 +8,34 @@ export const translations = {
       whatsapp: 'WhatsApp',
     },
     hero: {
-      title: 'Soluciones Tecnológicas Modernas',
+      title: 'Soluciones tecnológicas modernas',
       titleFor: 'para',
-      titleBusiness: 'Tu Negocio',
+      titleBusiness: 'tu negocio',
       subtitle:
         'SG Cloud es una consultoría tecnológica especializada en soluciones web de vanguardia, desarrollo de IA y automatización.',
-      subtitleShort: 'SG Cloud: Tu Socio Tecnológico',
+      subtitleShort: 'SG Cloud: tu socio tecnológico',
       description:
         'Desde sitios web y aplicaciones hasta chatbots de IA y automatización - construimos soluciones que impulsan tu negocio.',
       ctaPrimary: 'Contáctanos por WhatsApp',
-      ctaSecondary: 'Nuestros Servicios',
+      ctaSecondary: 'Nuestros servicios',
     },
     services: {
-      title: 'Lo Que Construimos',
-      tagline: 'Nuestros Servicios',
+      title: 'Lo que construimos',
+      tagline: 'Nuestros servicios',
       subtitle:
         'Nos especializamos en tecnologías modernas y entregamos soluciones de alta calidad adaptadas a las necesidades de tu negocio.',
       website: {
-        title: 'Sitios Web Modernos',
+        title: 'Sitios web modernos',
         description:
           'Sitios web rápidos, optimizados para SEO y responsivos construidos con los frameworks más recientes. Desde páginas de aterrizaje hasta aplicaciones web complejas.',
       },
       apps: {
-        title: 'Apps Móviles y PWAs',
+        title: 'Apps móviles y PWAs',
         description:
-          'Aplicaciones Web Progresivas que funcionan en todos los dispositivos. Experiencias similares a aplicaciones nativas sin la complejidad de las tiendas de aplicaciones.',
+          'Aplicaciones web progresivas que funcionan en todos los dispositivos. Experiencias similares a aplicaciones nativas sin la complejidad de las tiendas de aplicaciones.',
       },
       scrapers: {
-        title: 'Web Scrapers y Bots',
+        title: 'Web scrapers y bots',
         description:
           'Herramientas automatizadas de recolección y procesamiento de datos. Extrae, transforma y aprovecha datos para obtener ventajas competitivas.',
       },
@@ -50,37 +50,37 @@ export const translations = {
           'Interfaces conversacionales inteligentes para servicio al cliente, generación de leads y automatización. Disponibilidad 24/7.',
       },
       fullstack: {
-        title: 'Desarrollo Full-Stack',
+        title: 'Desarrollo full-stack',
         description:
           'Desarrollo de extremo a extremo desde diseño de base de datos hasta interfaces frontend. Manejamos todo el stack tecnológico.',
       },
     },
     whyUs: {
-      title: 'Por Qué Elegir SG Cloud',
-      tagline: 'Nuestras Ventajas',
+      title: 'Por qué elegir SG Cloud',
+      tagline: 'Nuestras ventajas',
       subtitle: 'Lo que nos distingue en el panorama de consultoría tecnológica',
       team: {
-        title: 'Equipo Experto',
+        title: 'Equipo experto',
         description:
           'Fundado por Carlos Gumucio y Benjamin Sepulveda, desarrolladores full-stack experimentados especializados en tecnologías modernas.',
       },
       tech: {
-        title: 'Stack Tecnológico Moderno',
+        title: 'Stack tecnológico moderno',
         description:
-          'Usamos tecnologías de vanguardia: Astro, React, Preact, Firebase, frameworks de IA/ML, y más. Siempre actualizados.',
+          'Usamos tecnologías de vanguardia: Astro, Preact, Google Cloud, frameworks de IA/ML, y más. Siempre actualizados.',
       },
       performance: {
-        title: 'Enfoque en Rendimiento',
+        title: 'Enfoque en rendimiento',
         description:
           'Cada solución que construimos está optimizada para velocidad y eficiencia. Tiempos de carga ultrarrápidos y excelente experiencia de usuario.',
       },
       communication: {
-        title: 'Comunicación Directa',
+        title: 'Comunicación directa',
         description:
           'Trabaja directamente con los fundadores. Sin intermediarios, sin confusión. Solo comunicación clara y honesta en cada paso.',
       },
       agile: {
-        title: 'Ágil y Flexible',
+        title: 'Ágil y flexible',
         description:
           'Iteraciones rápidas, tiempos de entrega cortos y adaptables a tus necesidades cambiantes. Nos movemos a tu ritmo.',
       },
@@ -91,8 +91,8 @@ export const translations = {
       },
     },
     testimonials: {
-      title: 'Historias de Éxito',
-      tagline: 'Testimonios de Clientes',
+      title: 'Historias de éxito',
+      tagline: 'Testimonios de clientes',
       client1: {
         text: 'Trabajar con SG Cloud fue un cambio radical para nuestro negocio. Nos construyeron un web scraper personalizado que nos ahorra 20 horas de trabajo manual cada semana. Profesional, rápido y exactamente lo que necesitábamos.',
         name: 'María González',
@@ -110,93 +110,93 @@ export const translations = {
       },
     },
     stats: {
-      title: 'Resultados Que Importan',
-      projects: 'Proyectos Completados',
-      clients: 'Clientes Satisfechos',
-      quality: 'Calidad del Código',
-      delivery: 'Entrega a Tiempo',
+      title: 'Resultados que importan',
+      projects: 'Proyectos completados',
+      clients: 'Clientes satisfechos',
+      quality: 'Calidad del código',
+      delivery: 'Entrega a tiempo',
     },
     cta: {
-      title: '¿Listo para Transformar',
-      titleBreak: 'Tu Negocio?',
+      title: '¿Listo para transformar',
+      titleBreak: 'tu negocio?',
       subtitle:
         'Hablemos sobre tu proyecto. Estamos aquí para convertir tus ideas en realidad con tecnología de vanguardia y desarrollo experto.',
-      primaryButton: 'Iniciar Tu Proyecto',
-      secondaryButton: 'Ver Servicios',
+      primaryButton: 'Inicia tu proyecto',
+      secondaryButton: 'Ver servicios',
     },
     contact: {
-      title: '¡Construyamos Algo Grandioso Juntos!',
+      title: '¡Construyamos algo grandioso juntos!',
       tagline: 'Contacto',
       preferDirect: '¿Prefieres chatear directamente?',
       whatsappCta:
         'Haz clic en el botón de abajo para iniciar una conversación en WhatsApp. Generalmente respondemos en pocas horas durante el horario laboral.',
       buttonWhatsapp: 'Envíanos un mensaje por WhatsApp',
-      getInTouch: 'Ponte en Contacto',
+      getInTouch: 'Ponte en contacto',
       whatsappLabel: 'WhatsApp',
       whatsappDescription: 'Línea directa con Carlos Gumucio. Respuestas rápidas, soluciones rápidas.',
       phoneLabel: 'Teléfono',
       emailLabel: 'Email',
       locationLabel: 'Ubicación',
       locationValue: 'Chile - Trabajando remotamente con clientes globales',
-      hoursLabel: 'Horario Laboral',
+      hoursLabel: 'Horario laboral',
       hoursValue: 'Lunes - Viernes: 9:00 AM - 6:00 PM (Hora de Chile)',
-      responseLabel: 'Tiempo de Respuesta',
+      responseLabel: 'Tiempo de respuesta',
       responseValue: 'Generalmente respondemos en 2-4 horas durante el horario laboral',
-      ctaTitle: '¿Listo para Comenzar?',
+      ctaTitle: '¿Listo para comenzar?',
       ctaSubtitle:
         'Hablemos sobre tu proyecto. Sin compromiso requerido - solo una conversación amigable sobre cómo podemos ayudarte.',
-      ctaButton: 'Iniciar una Conversación',
-      ctaServicesButton: 'Ver Nuestros Servicios',
+      ctaButton: 'Iniciar una conversación',
+      ctaServicesButton: 'Ver nuestros servicios',
     },
     about: {
       tagline: 'Sobre SG Cloud',
-      heroTitle: 'Construyendo el Futuro',
-      heroTitleHighlight: 'Una Solución a la Vez',
+      heroTitle: 'Construyendo el futuro',
+      heroTitleHighlight: 'una solución a la vez',
       heroSubtitle:
         'SG Cloud es una consultoría tecnológica nacida de una pasión por las tecnologías web modernas y la inteligencia artificial. No somos solo desarrolladores - somos solucionadores de problemas, innovadores y socios en tu viaje de transformación digital.',
-      storyTagline: 'Nuestra Historia',
-      storyTitle: 'Cómo Nació SG Cloud',
-      storyItem1Title: 'Fundada por Expertos',
+      storyTagline: 'Nuestra historia',
+      storyTitle: 'Cómo nació SG Cloud',
+      storyItem1Title: 'Fundada por expertos',
       storyItem1Description:
         'Carlos Gumucio y Benjamin Sepulveda unieron fuerzas para crear una consultoría que cierra la brecha entre tecnología de vanguardia y necesidades empresariales reales.',
-      storyItem2Title: 'Enfoque Moderno',
+      storyItem2Title: 'Enfoque moderno',
       storyItem2Description:
         'Nos enfocamos en soluciones ágiles y eficientes usando los últimos frameworks y tecnologías - sin código legado inflado.',
-      storyItem3Title: 'Filosofía Cliente-Primero',
+      storyItem3Title: 'Filosofía cliente-primero',
       storyItem3Description:
         'Comunicación directa, procesos transparentes y soluciones adaptadas a tus requisitos específicos.',
-      storyContentTitle: 'Experiencia Se Encuentra Con Innovación',
+      storyContentTitle: 'Experiencia se encuentra con innovación',
       storyContentSubtitle:
         'Combinamos años de experiencia en desarrollo full-stack con un enfoque vanguardista hacia la tecnología.',
-      teamTagline: 'Nuestros Fundadores',
-      teamTitle: 'Conoce al Equipo',
+      teamTagline: 'Nuestros fundadores',
+      teamTitle: 'Conoce al equipo',
       carlosTitle: 'Carlos Gumucio',
       carlosDescription:
-        'Co-fundador y Desarrollador Full-Stack. Experto en frameworks web modernos, soluciones de IA/ML y arquitectura en la nube. Apasionado por construir aplicaciones eficientes y escalables.',
+        'Co-fundador y desarrollador full-stack. Experto en frameworks web modernos, soluciones de IA/ML y arquitectura en la nube. Apasionado por construir aplicaciones eficientes y escalables.',
       benjaminTitle: 'Benjamin Sepulveda',
       benjaminDescription:
-        'Co-fundador y Desarrollador Full-Stack. Se especializa en automatización web, desarrollo frontend y crear experiencias de usuario sin costuras. Le encanta convertir requisitos complejos en soluciones elegantes.',
-      impactTitle: 'Nuestro Impacto',
-      impactYears: 'Años de Experiencia Combinada',
-      impactProjects: 'Proyectos Entregados',
-      impactTech: 'Tecnologías Dominadas',
-      impactSatisfaction: 'Satisfacción del Cliente',
-      valuesTitle: 'Nuestros Valores',
+        'Co-fundador y desarrollador full-stack. Se especializa en automatización web, desarrollo frontend y crear experiencias de usuario sin costuras. Le encanta convertir requisitos complejos en soluciones elegantes.',
+      impactTitle: 'Nuestro impacto',
+      impactYears: 'Años de experiencia combinada',
+      impactProjects: 'Proyectos entregados',
+      impactTech: 'Tecnologías dominadas',
+      impactSatisfaction: 'Satisfacción del cliente',
+      valuesTitle: 'Nuestros valores',
       valuesSubtitle: 'Lo que nos impulsa cada día',
-      value1Title: 'Rendimiento Primero',
+      value1Title: 'Rendimiento primero',
       value1Description:
         'Cada milisegundo cuenta. Construimos soluciones rápidas y optimizadas que entregan experiencias de usuario excepcionales.',
-      value2Title: 'Tecnologías Modernas',
+      value2Title: 'Tecnologías modernas',
       value2Description:
         'Nos mantenemos a la vanguardia, usando frameworks y herramientas de última generación que proporcionan los mejores resultados.',
-      value3Title: 'Comunicación Transparente',
+      value3Title: 'Comunicación transparente',
       value3Description:
         'Sin jerga, sin confusión. Explicamos todo en términos claros y te mantenemos informado en cada paso del camino.',
-      value4Title: 'Asociaciones a Largo Plazo',
+      value4Title: 'Asociaciones a largo plazo',
       value4Description:
         'No solo estamos construyendo proyectos - estamos construyendo relaciones. Tu éxito es nuestro éxito.',
-      techTitle: 'Tecnologías Que Amamos',
-      techTagline: 'Stack Tecnológico',
+      techTitle: 'Tecnologías que amamos',
+      techTagline: 'Stack tecnológico',
       techSubtitle: 'Siempre estamos aprendiendo y adaptándonos a las últimas herramientas y frameworks',
       techFrontend: 'Frontend',
       techFrontendList: 'Astro, React, Preact, Vue, Next.js, Tailwind CSS',
@@ -210,10 +210,10 @@ export const translations = {
       techDevOpsList: 'Docker, Firebase, Vercel, GitHub Actions, CI/CD',
       techTools: 'Herramientas',
       techToolsList: 'Git, VS Code, Figma, Postman, Chrome DevTools',
-      ctaTitle: 'Construyamos Algo Increíble',
+      ctaTitle: 'Construyamos algo increíble',
       ctaSubtitle: '¿Listo para comenzar tu proyecto? Estamos aquí para ayudarte a convertir tus ideas en realidad.',
-      ctaButton: 'Ponte en Contacto',
-      ctaServicesButton: 'Ver Servicios',
+      ctaButton: 'Ponte en contacto',
+      ctaServicesButton: 'Ver servicios',
     },
     whatsapp: {
       messageHomepage: '¡Hola! Estoy interesado en los servicios de SG Cloud.',
@@ -223,7 +223,7 @@ export const translations = {
     },
     footer: {
       servicesTitle: 'Servicios',
-      websites: 'Sitios Web',
+      websites: 'Sitios web',
       apps: 'Apps y PWAs',
       aiSolutions: 'Soluciones de IA',
       automation: 'Automatización',

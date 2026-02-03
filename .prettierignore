@@ -2,3 +2,5 @@ dist
 node_modules
 .github
 .changeset
+src/components/common/FacebookSDK.astro
+src/data/post/markdown-elements-demo-post.mdx
