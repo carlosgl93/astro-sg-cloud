@@ -245,10 +245,10 @@ export const translations = {
     },
     hero: {
       title: 'Modern Tech Solutions',
-      titleFor: 'for',
+      titleFor: ' for',
       titleBusiness: 'Your Business',
       subtitle:
-        'SG Cloud is a tech consultancy specializing in cutting-edge web solutions, AI development, and automation.',
+        'is a tech consultancy company specializing in cutting-edge web solutions, AI development, and automation.',
       subtitleShort: 'SG Cloud: Your Tech Partner',
       description:
         'From websites and apps to AI chatbots and automation - we build solutions that drive your business forward.',
@@ -330,19 +330,19 @@ export const translations = {
       title: 'Success Stories',
       tagline: 'Client Testimonials',
       client1: {
-        text: 'Working with SG Cloud was a game-changer for our business. They built us a custom web scraper that saves us 20 hours of manual work every week. Professional, fast, and exactly what we needed.',
-        name: 'María González',
+        text: 'Working with SG Cloud was a game-changer for our business. They built us a web and mobile app that allows us to stay synchronized with my team on real-time production information for our company.',
+        name: 'Sebastian Irarrázabal',
         role: 'Operations Manager',
       },
       client2: {
         text: 'The AI chatbot they developed handles 70% of our customer inquiries automatically. Our response time improved dramatically and customer satisfaction is at an all-time high.',
-        name: 'Juan Pérez',
-        role: 'CEO, E-commerce Platform',
+        name: 'Rodrigo Subercaseaux',
+        role: 'CEO, Cubrejardín',
       },
       client3: {
         text: "Carlos and Benjamin delivered our company website in record time. It's fast, beautiful, and our conversion rates increased by 40%. Highly recommended!",
-        name: 'Laura Martínez',
-        role: 'Marketing Director',
+        name: 'María de los Angeles Gumucio',
+        role: 'CEO, Gumucio Propiedades',
       },
     },
     stats: {
