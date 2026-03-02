@@ -156,7 +156,7 @@ export const translations = {
         'Somos tu partner tecnológico nacido de una pasión por las tecnologías web modernas y la inteligencia artificial. No somos solo desarrolladores - somos solucionadores de problemas, innovadores y socios en tu viaje de transformación digital.',
       storyTagline: 'Nuestra historia',
       storyTitle: 'Cómo nació SG Cloud',
-      storyItem1Title: 'Fundada por expertos',
+      storyItem1Title: 'Fundada por:',
       storyItem1Description:
         'Carlos Gumucio y Benjamin Sepulveda unieron fuerzas para crear una consultoría que cierra la brecha entre tecnología de vanguardia y necesidades empresariales reales.',
       storyItem2Title: 'Enfoque moderno',
@@ -175,7 +175,7 @@ export const translations = {
         'Co-fundador y desarrollador full-stack. Experto en frameworks web modernos, soluciones de IA/ML y arquitectura en la nube. Apasionado por construir aplicaciones eficientes y escalables.',
       benjaminTitle: 'Benjamin Sepulveda',
       benjaminDescription:
-        'Co-fundador y desarrollador full-stack. Se especializa en automatización web, desarrollo frontend y crear experiencias de usuario sin costuras. Le encanta convertir requisitos complejos en soluciones elegantes.',
+        'Co-fundador e ingeniero de datos. Se especializa en soluciones de IA/ML y automatización web. Le encanta convertir requisitos complejos en soluciones elegantes.',
       impactTitle: 'Nuestro impacto',
       impactYears: 'Años de experiencia combinada',
       impactProjects: 'Proyectos entregados',
@@ -392,7 +392,7 @@ export const translations = {
         "SG Cloud is a tech consultancy born from a passion for modern web technologies and artificial intelligence. We're not just developers - we're problem solvers, innovators, and partners in your digital transformation journey.",
       storyTagline: 'Our Story',
       storyTitle: 'How SG Cloud Was Born',
-      storyItem1Title: 'Founded by Experts',
+      storyItem1Title: 'Founded by:',
       storyItem1Description:
         'Carlos Gumucio and Benjamin Sepulveda joined forces to create a consultancy that bridges the gap between cutting-edge technology and real business needs.',
       storyItem2Title: 'Modern Approach',
@@ -408,10 +408,10 @@ export const translations = {
       teamTitle: 'Meet the Team',
       carlosTitle: 'Carlos Gumucio',
       carlosDescription:
-        'Co-founder & Full-Stack Developer. Expert in modern web frameworks, AI/ML solutions, and cloud architecture. Passionate about building performant, scalable applications.',
+        'Co-founder & Full-Stack Developer. Expert in modern web frameworks and cloud architecture. Passionate about building performant, scalable applications.',
       benjaminTitle: 'Benjamin Sepulveda',
       benjaminDescription:
-        'Co-founder & Full-Stack Developer. Specializes in web automation, frontend development, and creating seamless user experiences. Loves turning complex requirements into elegant solutions.',
+        'Co-founder & Full-Stack Developer. Specializes in AI/ML solutions and web automation. Loves turning complex requirements into elegant solutions.',
       impactTitle: 'Our Impact',
       impactYears: 'Years Combined Experience',
       impactProjects: 'Projects Delivered',
