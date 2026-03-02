@@ -10,8 +10,8 @@ const LanguageSwitcher: FunctionalComponent<LanguageSwitcherProps> = ({ currentL
   const [isOpen, setIsOpen] = useState(false);
 
   const languages = {
-    es: { name: 'Español', flag: '🇪🇸' },
-    en: { name: 'English', flag: '🇬🇧' },
+    es: { name: 'Español' },
+    en: { name: 'English' },
   };
 
   const toggleDropdown = () => setIsOpen(!isOpen);
@@ -38,10 +38,7 @@ const LanguageSwitcher: FunctionalComponent<LanguageSwitcherProps> = ({ currentL
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <span class="text-lg" aria-hidden="true">
-          {languages[currentLocale].flag}
-        </span>
-        <span class="hidden sm:inline">{languages[currentLocale].name}</span>
+        <span>{languages[currentLocale].name}</span>
         <svg
           class={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -60,7 +57,7 @@ const LanguageSwitcher: FunctionalComponent<LanguageSwitcherProps> = ({ currentL
           {/* Dropdown menu */}
           <div class="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div class="py-1" role="menu" aria-orientation="vertical">
-              {Object.entries(languages).map(([locale, { name, flag }]) => {
+              {Object.entries(languages).map(([locale, { name }]) => {
                 const isCurrent = locale === currentLocale;
                 return (
                   <a
@@ -74,9 +71,6 @@ const LanguageSwitcher: FunctionalComponent<LanguageSwitcherProps> = ({ currentL
                     role="menuitem"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span class="text-lg" aria-hidden="true">
-                      {flag}
-                    </span>
                     <span>{name}</span>
                     {isCurrent && (
                       <svg
