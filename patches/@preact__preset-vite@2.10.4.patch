@@ -1,0 +1,13 @@
+diff --git a/dist/esm/index.mjs b/dist/esm/index.mjs
+index 94d0e493ecc3c873aca012c584bd0cd5bef2cd27..a6e696fcda0ca3febc99ed1617a1f7f8e2d8a979 100644
+--- a/dist/esm/index.mjs
++++ b/dist/esm/index.mjs
+@@ -46,7 +46,7 @@ function preactPlugin({ devtoolsInProd, devToolsEnabled, prefreshEnabled, reactA
+         name: "vite:preact-jsx",
+         enforce: "pre",
+         config() {
+-            const supportsRolldown = "meta" in this && this.meta && typeof this.meta === "object"
++            const supportsRolldown = this != null && "meta" in this && this.meta && typeof this.meta === "object"
+                 ? "rolldownVersion" in this.meta
+                 : false;
+             const shouldUseRolldown = supportsRolldown && !useBabel;
