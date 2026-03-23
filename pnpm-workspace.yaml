@@ -1,0 +1,2 @@
+patchedDependencies:
+  '@preact/preset-vite@2.10.4': patches/@preact__preset-vite@2.10.4.patch
