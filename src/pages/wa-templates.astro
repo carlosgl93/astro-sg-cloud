@@ -3,11 +3,11 @@ import Layout from '~/layouts/PageLayout.astro';
 import TemplateManager from '~/components/widgets/TemplateManager';
 import HeroText from '~/components/widgets/HeroText.astro';
 
-const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL;
+const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL || 'http://localhost:8000';
 
 const metadata = {
-  title: 'Gestión de Plantillas WhatsApp - SG Cloud',
-  description: 'Crea, administra y envía plantillas de WhatsApp Business con SG Cloud',
+  title: 'Gestion de Plantillas WhatsApp - SG Cloud',
+  description: 'Crea, administra y envia plantillas de WhatsApp Business con SG Cloud',
   robots: {
     index: false,
     follow: false,
@@ -16,9 +16,9 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <HeroText tagline="WhatsApp Business" title="Gestión de Plantillas de WhatsApp" subtitle="Crea, administra y prueba tus plantillas de mensajes de WhatsApp Business." />
+  <HeroText tagline="WhatsApp Business" title="Gestion de Plantillas de WhatsApp" subtitle="Crea, administra y prueba tus plantillas de mensajes de WhatsApp Business." />
 
   <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-5xl">
-    <TemplateManager client:load apiUrl={apiUrl} />
+    <TemplateManager client:load apiUrl={apiUrl} locale="es" />
   </section>
 </Layout>

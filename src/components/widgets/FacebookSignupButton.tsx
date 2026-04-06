@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { FunctionalComponent } from 'preact';
-import { getFirestoreDb } from '~/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '~/lib/supabase';
 
 // Facebook SDK type definitions
 declare global {
@@ -25,9 +24,10 @@ declare global {
 
 interface FacebookSignupButtonProps {
   configId: string;
+  locale?: 'es' | 'en';
 }
 
-type SignupState = 'idle' | 'loading' | 'success' | 'error';
+type SignupState = 'idle' | 'loading' | 'connected' | 'success' | 'error';
 
 interface FacebookAuthResponse {
   authResponse?: {
@@ -37,19 +37,89 @@ interface FacebookAuthResponse {
   status?: string;
 }
 
-const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ configId }) => {
+const translations = {
+  es: {
+    connect: 'Conectar con Facebook',
+    connecting: 'Conectando...',
+    loading: 'Cargando...',
+    sdkError: 'Facebook SDK no cargado. Recarga la pagina.',
+    cancelled: 'Autorizacion cancelada o incompleta.',
+    saveError: 'Error al guardar la autenticacion. Intenta de nuevo.',
+    successTitle: 'Conexion Exitosa!',
+    successDesc:
+      'Tu cuenta de Facebook Business ha sido conectada exitosamente.',
+    goToDashboard: 'Ir al Panel de Control',
+    failTitle: 'Conexion Fallida',
+    retry: 'Intentar de Nuevo',
+    alreadyConnected: 'WhatsApp Business ya esta conectado.',
+    alreadyConnectedDesc: 'Tu cuenta ya esta vinculada. Puedes gestionar tus plantillas desde el panel de control.',
+    reconnect: 'Reconectar cuenta',
+  },
+  en: {
+    connect: 'Connect with Facebook',
+    connecting: 'Connecting...',
+    loading: 'Loading...',
+    sdkError: 'Facebook SDK not loaded. Please refresh the page.',
+    cancelled: 'Authorization was cancelled or incomplete.',
+    saveError: 'Failed to save authentication. Please try again.',
+    successTitle: 'Connection Successful!',
+    successDesc:
+      'Your Facebook Business account has been connected successfully.',
+    goToDashboard: 'Go to Dashboard',
+    failTitle: 'Connection Failed',
+    retry: 'Try Again',
+    alreadyConnected: 'WhatsApp Business is already connected.',
+    alreadyConnectedDesc: 'Your account is already linked. You can manage your templates from the dashboard.',
+    reconnect: 'Reconnect account',
+  },
+};
+
+const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
+  configId,
+  locale = 'es',
+}) => {
+  const t = translations[locale];
   const [isSdkReady, setIsSdkReady] = useState(false);
   const [signupState, setSignupState] = useState<SignupState>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
+    // Check if user already has WhatsApp credentials
+    const checkExistingConnection = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: membership } = await supabase
+        .from('tenant_users')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (membership?.tenant_id) {
+        const { data: creds } = await supabase
+          .from('tenant_whatsapp_credentials')
+          .select('id, status')
+          .eq('tenant_id', membership.tenant_id)
+          .limit(1)
+          .maybeSingle();
+
+        if (creds?.status === 'active') {
+          setSignupState('connected');
+        }
+      }
+    };
+
+    checkExistingConnection();
+
     // Check if FB SDK is already loaded
     if (typeof window.FB !== 'undefined') {
       setIsSdkReady(true);
       return;
     }
 
-    // Listen for SDK ready event
     const handleSdkReady = () => setIsSdkReady(true);
     window.addEventListener('facebook-sdk-ready', handleSdkReady);
 
@@ -58,33 +128,41 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
     };
   }, []);
 
-  const saveAuthCodeToFirestore = async (authCode: string, userId?: string) => {
-    try {
-      const db = getFirestoreDb();
-      if (!db) {
-        throw new Error('Firestore is not configured');
-      }
+  const exchangeCodeWithBackend = async (
+    authCode: string,
+    wabaId?: string,
+    phoneNumberId?: string
+  ) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
 
-      const authCollection = collection(db, 'facebook_auth');
-      await addDoc(authCollection, {
-        authCode,
-        userId: userId || null,
-        timestamp: serverTimestamp(),
-        status: 'pending',
-        scope: 'whatsapp_business_management,whatsapp_business_messaging',
-      });
+    const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL || 'http://localhost:8000';
+    const resp = await fetch(`${apiUrl}/api/auth/facebook/exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        auth_code: authCode,
+        waba_id: wabaId || '',
+        phone_number_id: phoneNumberId || '',
+      }),
+    });
 
-      console.log('Auth code saved to Firestore successfully');
-      return true;
-    } catch (error) {
-      console.error('Error saving auth code to Firestore:', error);
-      throw error;
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail || 'Backend exchange failed');
     }
+
+    return resp.json();
   };
 
   const handleClick = () => {
     if (!isSdkReady || typeof window.FB === 'undefined') {
-      setErrorMessage('Facebook SDK not loaded. Please refresh the page.');
+      setErrorMessage(t.sdkError);
       setSignupState('error');
       return;
     }
@@ -92,22 +170,24 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
     setSignupState('loading');
     setErrorMessage('');
 
+    // Capture WABA info from Embedded Signup sessionInfoListener
+    let sessionWabaId = '';
+    let sessionPhoneNumberId = '';
+
     window.FB.login(
       (response: FacebookAuthResponse) => {
         if (response.authResponse && response.authResponse.code) {
-          // Handle async Firestore operation separately
-          saveAuthCodeToFirestore(response.authResponse.code, response.authResponse.userID)
+          exchangeCodeWithBackend(response.authResponse.code, sessionWabaId, sessionPhoneNumberId)
             .then(() => {
               setSignupState('success');
             })
             .catch((error) => {
-              console.error('Failed to save auth code:', error);
-              setErrorMessage('Failed to save authentication. Please try again.');
+              console.error('Failed to exchange auth code:', error);
+              setErrorMessage(t.saveError);
               setSignupState('error');
             });
         } else {
-          console.log('User cancelled login or did not fully authorize.');
-          setErrorMessage('Authorization was cancelled or incomplete.');
+          setErrorMessage(t.cancelled);
           setSignupState('error');
         }
       },
@@ -115,10 +195,14 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        // WhatsApp permissions - others are granted through Embedded Signup config
         scope: 'whatsapp_business_management,whatsapp_business_messaging',
         extras: {
           feature: 'whatsapp_embedded_signup',
+          sessionInfoListener: (info: { waba_id?: string; phone_number_id?: string }) => {
+            console.log('Embedded Signup session info:', info);
+            sessionWabaId = info.waba_id || '';
+            sessionPhoneNumberId = info.phone_number_id || '';
+          },
         },
       }
     );
@@ -128,6 +212,39 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
     setSignupState('idle');
     setErrorMessage('');
   };
+
+  const dashboardPath = locale === 'en' ? '/en/dashboard' : '/dashboard';
+
+  if (signupState === 'connected') {
+    return (
+      <div class="p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-center">
+        <svg
+          class="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <h3 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">{t.alreadyConnected}</h3>
+        <p class="text-green-800 dark:text-green-200 mb-4">{t.alreadyConnectedDesc}</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a
+            href={dashboardPath}
+            class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+          >
+            {t.goToDashboard}
+          </a>
+          <button
+            onClick={() => setSignupState('idle')}
+            class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-green-700 dark:text-green-300 border border-green-600 dark:border-green-500 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-md transition-colors"
+          >
+            {t.reconnect}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (signupState === 'success') {
     return (
@@ -140,16 +257,13 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
         >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
         </svg>
-        <h3 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">Connection Successful!</h3>
-        <p class="text-green-800 dark:text-green-200 mb-4">
-          Your Facebook Business account has been connected successfully. Our team will review and activate your
-          integration shortly.
-        </p>
+        <h3 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">{t.successTitle}</h3>
+        <p class="text-green-800 dark:text-green-200 mb-4">{t.successDesc}</p>
         <a
-          href="/"
+          href={dashboardPath}
           class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
         >
-          Return to Homepage
+          {t.goToDashboard}
         </a>
       </div>
     );
@@ -171,13 +285,13 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <h3 class="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">Connection Failed</h3>
+        <h3 class="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">{t.failTitle}</h3>
         <p class="text-red-800 dark:text-red-200 mb-4">{errorMessage || 'An unexpected error occurred.'}</p>
         <button
           onClick={handleRetry}
           class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
         >
-          Try Again
+          {t.retry}
         </button>
       </div>
     );
@@ -199,7 +313,7 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ 
           ></path>
         </svg>
       )}
-      {signupState === 'loading' ? 'Connecting...' : isSdkReady ? 'Connect with Facebook' : 'Loading...'}
+      {signupState === 'loading' ? t.connecting : isSdkReady ? t.connect : t.loading}
     </button>
   );
 };
