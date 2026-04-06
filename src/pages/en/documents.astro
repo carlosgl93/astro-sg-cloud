@@ -1,0 +1,18 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import DocumentManager from '~/components/widgets/DocumentManager';
+
+const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL || 'http://localhost:8000';
+
+const metadata = {
+  title: 'Knowledge Base - SG Cloud',
+  description: 'Upload documents to train your FAQ bot',
+  robots: { index: false, follow: false },
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-5xl">
+    <DocumentManager client:load apiUrl={apiUrl} locale="en" />
+  </section>
+</Layout>

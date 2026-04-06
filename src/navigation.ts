@@ -20,6 +20,7 @@ export const getHeaderData = (locale: Locale = 'es') => {
       contact: 'Contacto',
       whatsapp: 'WhatsApp',
       whatsappMessage: '¡Hola! Estoy interesado en los servicios de SG Cloud.',
+      dashboard: 'Panel',
     },
     en: {
       home: 'Home',
@@ -28,6 +29,7 @@ export const getHeaderData = (locale: Locale = 'es') => {
       contact: 'Contact',
       whatsapp: 'WhatsApp',
       whatsappMessage: "Hello! I'm interested in SG Cloud's services.",
+      dashboard: 'Dashboard',
     },
   };
 
@@ -53,6 +55,10 @@ export const getHeaderData = (locale: Locale = 'es') => {
       },
     ],
     actions: [
+      {
+        text: t.dashboard,
+        href: getLocalizedPath('/dashboard', locale),
+      },
       {
         text: t.whatsapp,
         href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsappMessage)}`,

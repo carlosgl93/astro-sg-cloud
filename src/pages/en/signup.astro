@@ -1,0 +1,16 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import SignupForm from '~/components/widgets/SignupForm';
+
+const metadata = {
+  title: 'Create Account - SG Cloud',
+  description: 'Create your SG Cloud account to manage your WhatsApp Business',
+  robots: { index: false, follow: false },
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-5xl">
+    <SignupForm client:load locale="en" />
+  </section>
+</Layout>

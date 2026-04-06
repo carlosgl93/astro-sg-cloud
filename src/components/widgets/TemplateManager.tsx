@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { FunctionalComponent } from 'preact';
+import { supabase } from '~/lib/supabase';
+import AuthGuard from './AuthGuard';
 
 interface Template {
   id: string;
@@ -12,14 +14,27 @@ interface Template {
 
 interface TemplateManagerProps {
   apiUrl: string;
+  locale?: 'es' | 'en';
 }
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 
-const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) => {
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  return headers;
+}
+
+const TemplateManagerContent: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [needsReconnect, setNeedsReconnect] = useState(false);
 
   // Create form state
   const [createName, setCreateName] = useState('');
@@ -46,8 +61,14 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
   const fetchTemplates = async () => {
     setLoading(true);
     setFeedback(null);
+    setNeedsReconnect(false);
     try {
-      const res = await fetch(`${apiUrl}/templates`);
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${apiUrl}/templates`, { headers });
+      if (res.status === 403) {
+        setNeedsReconnect(true);
+        return;
+      }
       if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
       const json = await res.json();
       setTemplates(json.data || []);
@@ -66,7 +87,8 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
   const handleDelete = async (name: string) => {
     if (!confirm(`Delete template "${name}"?`)) return;
     try {
-      const res = await fetch(`${apiUrl}/templates/${name}`, { method: 'DELETE' });
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${apiUrl}/templates/${name}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
       setFeedback({ type: 'success', message: `Template "${name}" deleted successfully.` });
       fetchTemplates();
@@ -90,9 +112,10 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         components.push({ type: 'FOOTER', text: createFooter.trim() });
       }
 
+      const headers = await getAuthHeaders();
       const res = await fetch(`${apiUrl}/templates`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: createName.trim().toLowerCase().replace(/\s+/g, '_'),
           language: createLanguage,
@@ -125,9 +148,10 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
     try {
       let res: Response;
       try {
+        const headers = await getAuthHeaders();
         res = await fetch(`${apiUrl}/templates/send`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             to: sendPhone.trim(),
             template_name: sendTemplate,
@@ -144,7 +168,10 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         const metaMsg = typeof detail === 'object' ? detail?.error?.error_user_msg || detail?.error?.message : detail;
         throw new Error(metaMsg || `Error ${res.status}: ${res.statusText}`);
       }
-      setSendFeedback({ type: 'success', message: `Message sent successfully! ${data?.messages?.[0]?.id ? `ID: ${data.messages[0].id}` : ''}` });
+      setSendFeedback({
+        type: 'success',
+        message: `Message sent successfully! ${data?.messages?.[0]?.id ? `ID: ${data.messages[0].id}` : ''}`,
+      });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to send message';
       setSendFeedback({ type: 'error', message });
@@ -166,8 +193,23 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
 
   const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
 
+  const connectPath = `/auth-fb`;
+
   return (
     <div class="space-y-10">
+      {/* Reconnect banner */}
+      {needsReconnect && (
+        <div class="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 flex items-center justify-between">
+          <span>WhatsApp Business is not connected or the token has expired.</span>
+          <a
+            href={connectPath}
+            class="ml-4 px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors whitespace-nowrap"
+          >
+            Reconnect WhatsApp
+          </a>
+        </div>
+      )}
+
       {/* Feedback banner */}
       {feedback && (
         <div
@@ -181,7 +223,7 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         </div>
       )}
 
-      {/* ── Template List ── */}
+      {/* Template List */}
       <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">Templates</h2>
@@ -235,7 +277,7 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         )}
       </div>
 
-      {/* ── Create Template ── */}
+      {/* Create Template */}
       <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Create Template</h2>
         <form onSubmit={handleCreate} class="space-y-4">
@@ -329,7 +371,7 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         </form>
       </div>
 
-      {/* ── Send Test Message ── */}
+      {/* Send Test Message */}
       <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Send Test Message</h2>
 
@@ -398,6 +440,14 @@ const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl }) 
         </form>
       </div>
     </div>
+  );
+};
+
+const TemplateManager: FunctionalComponent<TemplateManagerProps> = ({ apiUrl, locale = 'es' }) => {
+  return (
+    <AuthGuard locale={locale}>
+      <TemplateManagerContent apiUrl={apiUrl} />
+    </AuthGuard>
   );
 };
 

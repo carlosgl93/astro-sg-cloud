@@ -1,0 +1,16 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import LoginForm from '~/components/widgets/LoginForm';
+
+const metadata = {
+  title: 'Log In - SG Cloud',
+  description: 'Log in to your SG Cloud account',
+  robots: { index: false, follow: false },
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-5xl">
+    <LoginForm client:load locale="en" />
+  </section>
+</Layout>
