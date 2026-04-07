@@ -1,0 +1,43 @@
+name: Deploy Frontend to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_WHATSAPP_API_URL: ${{ secrets.PUBLIC_WHATSAPP_API_URL }}
+          PUBLIC_FACEBOOK_APP_ID: ${{ secrets.PUBLIC_FACEBOOK_APP_ID }}
+          PUBLIC_FACEBOOK_CONFIG_ID: ${{ secrets.PUBLIC_FACEBOOK_CONFIG_ID }}
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: sg-cloud-cefee
+          channelId: live
