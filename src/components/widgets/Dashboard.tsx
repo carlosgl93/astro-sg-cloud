@@ -23,6 +23,8 @@ const translations = {
     templatesDesc: 'Crea y administra tus plantillas de mensajes',
     documents: 'Documentos',
     documentsDesc: 'Sube documentos para entrenar tu bot de FAQs',
+    conversations: 'Conversaciones',
+    conversationsDesc: 'Historial de chats con tus clientes',
     whatsappConnect: 'Conectar WhatsApp',
     whatsappConnectDesc: 'Vincula tu cuenta de WhatsApp Business',
     whatsappConnected: 'WhatsApp Conectado',
@@ -45,6 +47,8 @@ const translations = {
     templatesDesc: 'Create and manage your message templates',
     documents: 'Documents',
     documentsDesc: 'Upload documents to train your FAQ bot',
+    conversations: 'Conversations',
+    conversationsDesc: 'Chat history with your customers',
     whatsappConnect: 'Connect WhatsApp',
     whatsappConnectDesc: 'Link your WhatsApp Business account',
     whatsappConnected: 'WhatsApp Connected',
@@ -159,6 +163,7 @@ function DashboardContent({ locale = 'es' }: Props) {
   const templatesPath = locale === 'en' ? '/en/wa-templates' : '/wa-templates';
   const connectPath = locale === 'en' ? '/en/auth-fb' : '/auth-fb';
   const documentsPath = locale === 'en' ? '/en/documents' : '/documents';
+  const conversationsPath = locale === 'en' ? '/en/conversations' : '/conversations';
 
   const now = new Date();
   const tokenIsExpired = tokenExpiresAt !== null && tokenExpiresAt <= now;
@@ -269,6 +274,15 @@ function DashboardContent({ locale = 'es' }: Props) {
           <div class="text-3xl mb-3">📄</div>
           <h3 class="text-lg font-semibold dark:text-white mb-2">{t.documents}</h3>
           <p class="text-sm text-gray-600 dark:text-gray-400">{t.documentsDesc}</p>
+        </a>
+
+        <a
+          href={conversationsPath}
+          class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
+        >
+          <div class="text-3xl mb-3">💬</div>
+          <h3 class="text-lg font-semibold dark:text-white mb-2">{t.conversations}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{t.conversationsDesc}</p>
         </a>
       </div>
     </div>
