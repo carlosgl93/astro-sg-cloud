@@ -255,15 +255,28 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   }, [selected, messages.length]);
 
   async function sendReply() {
-    if (!reply.trim() || !activeHandoff || !accessToken) return;
+    if (!reply.trim() || !activeHandoff || !accessToken || !selected) return;
+    const text = reply.trim();
     setSending(true);
+    setReply('');
+
+    // Optimistic append
+    const optimistic: Message = {
+      id: Date.now(),
+      user_number: selected,
+      role: 'assistant',
+      message: text,
+      metadata: { source: 'human_agent' },
+      created_at: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimistic]);
+
     try {
-      const res = await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
+      await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ message: reply.trim() }),
+        body: JSON.stringify({ message: text }),
       });
-      if (res.ok) setReply('');
     } finally {
       setSending(false);
     }
