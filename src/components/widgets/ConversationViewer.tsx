@@ -35,54 +35,54 @@ const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-2500581
 const t = {
   es: {
     title: 'Conversaciones',
-    subtitle: 'Historial de conversaciones con clientes',
-    back: 'Volver al panel',
+    subtitle: 'Conversaciones con clientes',
+    back: 'Panel',
+    backToList: '← Volver',
     noConversations: 'No hay conversaciones aún.',
-    selectContact: 'Selecciona una conversación para verla.',
+    selectContact: 'Selecciona una conversación.',
     loading: 'Cargando...',
     you: 'Bot',
     agent: 'Agente',
     customer: 'Cliente',
     system: 'Sistema',
     search: 'Buscar número...',
-    messages: (n: number) => `${n} mensaje${n !== 1 ? 's' : ''}`,
+    messages: (n: number) => `${n} msg`,
     confidence: 'Confianza',
     category: 'Categoría',
     method: 'Método',
-    handoffActive: 'Handoff activo — estás hablando directamente con el cliente',
+    handoffActive: 'Handoff activo — hablas directo con el cliente',
     handoffBadge: 'En vivo',
     closeHandoff: 'Cerrar handoff',
     closeHandoffConfirm: '¿Cerrar handoff? El bot retomará la conversación.',
     replyPlaceholder: 'Escribe tu respuesta...',
     send: 'Enviar',
-    sending: 'Enviando...',
-    handoffClosed: 'Handoff cerrado. El bot retoma la conversación.',
+    sending: '...',
     newHandoff: (n: string) => `Nuevo handoff de +${n}`,
   },
   en: {
     title: 'Conversations',
-    subtitle: 'Customer conversation history',
-    back: 'Back to dashboard',
+    subtitle: 'Customer conversations',
+    back: 'Dashboard',
+    backToList: '← Back',
     noConversations: 'No conversations yet.',
-    selectContact: 'Select a conversation to view it.',
+    selectContact: 'Select a conversation.',
     loading: 'Loading...',
     you: 'Bot',
     agent: 'Agent',
     customer: 'Customer',
     system: 'System',
     search: 'Search number...',
-    messages: (n: number) => `${n} message${n !== 1 ? 's' : ''}`,
+    messages: (n: number) => `${n} msg`,
     confidence: 'Confidence',
     category: 'Category',
     method: 'Method',
-    handoffActive: 'Active handoff — you are talking directly with the customer',
+    handoffActive: 'Active handoff — talking directly with customer',
     handoffBadge: 'Live',
     closeHandoff: 'Close handoff',
-    closeHandoffConfirm: 'Close handoff? The bot will resume the conversation.',
+    closeHandoffConfirm: 'Close handoff? The bot will resume.',
     replyPlaceholder: 'Type your reply...',
     send: 'Send',
-    sending: 'Sending...',
-    handoffClosed: 'Handoff closed. Bot resumes conversation.',
+    sending: '...',
     newHandoff: (n: string) => `New handoff from +${n}`,
   },
 };
@@ -100,19 +100,44 @@ function formatTime(iso: string, locale: string) {
 
 function formatFull(iso: string, locale: string) {
   return new Date(iso).toLocaleString(locale === 'en' ? 'en-US' : 'es-CL', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 }
 
 function MetaBadge({ label, value }: { label: string; value: unknown }) {
   if (value == null || value === '') return null;
-  const display = typeof value === 'number' ? `${(value as number * 100).toFixed(0)}%` : String(value);
+  const display = typeof value === 'number' ? `${((value as number) * 100).toFixed(0)}%` : String(value);
   return (
-    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
       <span class="font-medium">{label}:</span> {display}
     </span>
   );
+}
+
+function buildContacts(rows: Message[]): Contact[] {
+  const map = new Map<string, Contact>();
+  for (const row of rows) {
+    map.set(row.user_number, {
+      user_number: row.user_number,
+      last_message: row.message,
+      last_at: row.created_at,
+      count: (map.get(row.user_number)?.count ?? 0) + 1,
+    });
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime()
+  );
+}
+
+function triggerNotification(title: string, body: string) {
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/favicon.ico' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') new Notification(title, { body, icon: '/favicon.ico' });
+    });
+  }
 }
 
 function ConversationViewerContent({ locale = 'es' }: Props) {
@@ -131,11 +156,14 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   const [sending, setSending] = useState(false);
   const threadEndRef = useRef<HTMLDivElement>(null);
 
+  // On mobile, selected contact replaces the list view
+  const showThread = selected !== null;
+
   const activeHandoff = selected
     ? handoffs.find(h => h.whatsapp_number === selected && h.status === 'active')
     : null;
 
-  // Load tenant + messages
+  // Load tenant + messages + read ?number= param
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -161,6 +189,12 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       const rows = (data || []) as Message[];
       setMessages(rows);
       setContacts(buildContacts(rows));
+
+      // Auto-select from ?number= URL param (deep link from Telegram)
+      const params = new URLSearchParams(window.location.search);
+      const numberParam = params.get('number');
+      if (numberParam) setSelected(numberParam);
+
       setLoading(false);
     };
     load();
@@ -169,24 +203,18 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   // Load active handoffs
   useEffect(() => {
     if (!tenantId || !accessToken) return;
-    const fetchHandoffs = async () => {
-      const res = await fetch(`${API_BASE}/api/handoffs/`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (res.ok) setHandoffs(await res.json());
-    };
-    fetchHandoffs();
+    fetch(`${API_BASE}/api/handoffs/`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }).then(r => r.ok ? r.json() : []).then(setHandoffs);
   }, [tenantId, accessToken]);
 
   // Realtime: new messages
   useEffect(() => {
     if (!tenantId) return;
     const channel = supabase
-      .channel('conversations-realtime')
+      .channel('conversations-rt')
       .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'conversations',
+        event: 'INSERT', schema: 'public', table: 'conversations',
         filter: `tenant_id=eq.${tenantId}`,
       }, (payload) => {
         const msg = payload.new as Message;
@@ -200,15 +228,13 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [tenantId]);
 
-  // Realtime: active_handoffs — notify on new handoff
+  // Realtime: handoffs — notify + update state
   useEffect(() => {
     if (!tenantId) return;
     const channel = supabase
-      .channel('handoffs-realtime')
+      .channel('handoffs-rt')
       .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'active_handoffs',
+        event: '*', schema: 'public', table: 'active_handoffs',
         filter: `tenant_id=eq.${tenantId}`,
       }, (payload) => {
         const h = payload.new as Handoff;
@@ -223,36 +249,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [tenantId]);
 
-  // Scroll to bottom when thread changes
+  // Scroll to bottom on thread change
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selected, messages.length]);
-
-  function buildContacts(rows: Message[]): Contact[] {
-    const map = new Map<string, Contact>();
-    for (const row of rows) {
-      map.set(row.user_number, {
-        user_number: row.user_number,
-        last_message: row.message,
-        last_at: row.created_at,
-        count: (map.get(row.user_number)?.count ?? 0) + 1,
-      });
-    }
-    return Array.from(map.values()).sort(
-      (a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime()
-    );
-  }
-
-  function triggerNotification(title: string, body: string) {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'granted') {
-      new Notification(title, { body, icon: '/favicon.ico' });
-    } else if (Notification.permission !== 'denied') {
-      Notification.requestPermission().then(p => {
-        if (p === 'granted') new Notification(title, { body, icon: '/favicon.ico' });
-      });
-    }
-  }
 
   async function sendReply() {
     if (!reply.trim() || !activeHandoff || !accessToken) return;
@@ -260,10 +260,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     try {
       const res = await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({ message: reply.trim() }),
       });
       if (res.ok) setReply('');
@@ -289,184 +286,191 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     return (
       <div class="flex items-center justify-center py-20">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        <span class="ml-3 text-gray-600 dark:text-gray-400">{tr.loading}</span>
+        <span class="ml-3 text-gray-500 dark:text-gray-400">{tr.loading}</span>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-bold dark:text-white">{tr.title}</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400">{tr.subtitle}</p>
+    <div class="flex flex-col" style="height: calc(100dvh - 64px)">
+      {/* Top bar */}
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+        {showThread ? (
+          <button
+            onClick={() => setSelected(null)}
+            class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0"
+          >
+            {tr.backToList}
+          </button>
+        ) : (
+          <a href={dashboardPath} class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">
+            {tr.back}
+          </a>
+        )}
+        <div class="flex-1 min-w-0">
+          {showThread ? (
+            <div class="flex items-center gap-2">
+              <p class="font-semibold text-sm dark:text-white truncate">+{selected}</p>
+              {activeHandoff && (
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium flex-shrink-0">
+                  <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  {tr.handoffBadge}
+                </span>
+              )}
+            </div>
+          ) : (
+            <h1 class="font-semibold text-base dark:text-white">{tr.title}</h1>
+          )}
         </div>
-        <a
-          href={dashboardPath}
-          class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors"
-        >
-          {tr.back}
-        </a>
+        {showThread && activeHandoff && (
+          <button
+            onClick={closeHandoff}
+            class="flex-shrink-0 px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+          >
+            {tr.closeHandoff}
+          </button>
+        )}
       </div>
 
-      {contacts.length === 0 ? (
-        <div class="text-center py-20 text-gray-500 dark:text-gray-400">
-          <div class="text-5xl mb-4">💬</div>
-          <p>{tr.noConversations}</p>
-        </div>
-      ) : (
-        <div class="flex gap-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden" style="height: 70vh">
-          {/* Contact list */}
-          <div class="w-72 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-gray-900">
-            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-              <input
-                type="text"
-                placeholder={tr.search}
-                value={search}
-                onInput={e => setSearch((e.target as HTMLInputElement).value)}
-                class="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div class="overflow-y-auto flex-1">
-              {filtered.map(c => {
-                const hasHandoff = handoffs.some(h => h.whatsapp_number === c.user_number && h.status === 'active');
-                return (
-                  <button
-                    key={c.user_number}
-                    onClick={() => setSelected(c.user_number)}
-                    class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-2 border-l-blue-500' : ''}`}
-                  >
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
-                      <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        {hasHandoff && (
-                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
-                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                            {tr.handoffBadge}
-                          </span>
-                        )}
-                        <span class="text-xs text-gray-400">{formatTime(c.last_at, locale)}</span>
-                      </div>
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{c.last_message}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.count)}</p>
-                  </button>
-                );
-              })}
-            </div>
+      {/* Body */}
+      <div class="flex flex-1 min-h-0 overflow-hidden">
+
+        {/* Contact list — hidden on mobile when thread is open */}
+        <div class={`${showThread ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}>
+          <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+            <input
+              type="text"
+              placeholder={tr.search}
+              value={search}
+              onInput={e => setSearch((e.target as HTMLInputElement).value)}
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
+          <div class="overflow-y-auto flex-1">
+            {contacts.length === 0 ? (
+              <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-12">{tr.noConversations}</p>
+            ) : filtered.map(c => {
+              const hasHandoff = handoffs.some(h => h.whatsapp_number === c.user_number && h.status === 'active');
+              return (
+                <button
+                  key={c.user_number}
+                  onClick={() => setSelected(c.user_number)}
+                  class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                      {hasHandoff && (
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
+                          <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                          {tr.handoffBadge}
+                        </span>
+                      )}
+                      <span class="text-xs text-gray-400">{formatTime(c.last_at, locale)}</span>
+                    </div>
+                  </div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{c.last_message}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.count)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Thread */}
-          <div class="flex-1 flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-            {!selected ? (
-              <div class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600">
-                <div class="text-center">
-                  <div class="text-4xl mb-3">👈</div>
-                  <p class="text-sm">{tr.selectContact}</p>
-                </div>
+        {/* Thread panel — full width on mobile */}
+        <div class={`${showThread ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-h-0 bg-white dark:bg-gray-900`}>
+          {!selected ? (
+            <div class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600">
+              <div class="text-center">
+                <div class="text-4xl mb-3">💬</div>
+                <p class="text-sm">{tr.selectContact}</p>
               </div>
-            ) : (
-              <>
-                {/* Thread header */}
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
-                  <div>
-                    <p class="font-medium dark:text-white">+{selected}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">{tr.messages(thread.length)}</p>
-                  </div>
-                  {activeHandoff && (
-                    <button
-                      onClick={closeHandoff}
-                      class="px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 transition-colors"
-                    >
-                      {tr.closeHandoff}
-                    </button>
-                  )}
+            </div>
+          ) : (
+            <>
+              {/* Handoff banner */}
+              {activeHandoff && (
+                <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-2 flex-shrink-0">
+                  <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
+                  <p class="text-xs text-green-700 dark:text-green-400">{tr.handoffActive}</p>
                 </div>
+              )}
 
-                {/* Handoff banner */}
-                {activeHandoff && (
-                  <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
-                    <p class="text-xs text-green-700 dark:text-green-400">{tr.handoffActive}</p>
-                  </div>
-                )}
+              {/* Messages */}
+              <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                {thread.map(msg => {
+                  const isUser = msg.role === 'user';
+                  const isSystem = msg.role === 'system';
+                  const isHumanAgent = msg.role === 'assistant' && (msg.metadata as any)?.source === 'human_agent';
+                  const meta = msg.metadata || {};
 
-                {/* Messages */}
-                <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                  {thread.map(msg => {
-                    const isUser = msg.role === 'user';
-                    const isSystem = msg.role === 'system';
-                    const isHumanAgent = msg.role === 'assistant' && (msg.metadata as any)?.source === 'human_agent';
-                    const meta = msg.metadata || {};
-
-                    return (
-                      <div key={msg.id} class={`flex ${isUser ? 'justify-start' : isSystem ? 'justify-center' : 'justify-end'}`}>
-                        {isSystem ? (
-                          <div class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-full max-w-xs text-center">
+                  return (
+                    <div key={msg.id} class={`flex ${isUser ? 'justify-start' : isSystem ? 'justify-center' : 'justify-end'}`}>
+                      {isSystem ? (
+                        <div class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-400 text-xs rounded-full max-w-[80%] text-center">
+                          {msg.message}
+                        </div>
+                      ) : (
+                        <div class="max-w-[80%]">
+                          <div class={`px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
+                            isUser
+                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-sm'
+                              : isHumanAgent
+                                ? 'bg-green-600 text-white rounded-tr-sm'
+                                : 'bg-blue-600 text-white rounded-tr-sm'
+                          }`}>
                             {msg.message}
                           </div>
-                        ) : (
-                          <div class={`max-w-xs lg:max-w-md`}>
-                            <div class={`px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap ${
-                              isUser
-                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm'
-                                : isHumanAgent
-                                  ? 'bg-green-600 text-white rounded-tr-sm'
-                                  : 'bg-blue-600 text-white rounded-tr-sm'
-                            }`}>
-                              {msg.message}
-                            </div>
-                            <div class={`mt-1 flex flex-wrap gap-1 ${isUser ? '' : 'justify-end'}`}>
-                              {(meta as any).confidence != null && (
-                                <MetaBadge label={tr.confidence} value={(meta as any).confidence} />
-                              )}
-                              {(meta as any).faq_category && (
-                                <MetaBadge label={tr.category} value={(meta as any).faq_category} />
-                              )}
-                              {(meta as any).method && (
-                                <MetaBadge label={tr.method} value={(meta as any).method} />
-                              )}
-                            </div>
-                            <p class={`text-xs text-gray-400 mt-1 ${isUser ? '' : 'text-right'}`}>
-                              {isUser ? tr.customer : isHumanAgent ? tr.agent : tr.you} · {formatFull(msg.created_at, locale)}
-                            </p>
+                          <div class={`mt-1 flex flex-wrap gap-1 ${isUser ? '' : 'justify-end'}`}>
+                            {(meta as any).confidence != null && <MetaBadge label={tr.confidence} value={(meta as any).confidence} />}
+                            {(meta as any).faq_category && <MetaBadge label={tr.category} value={(meta as any).faq_category} />}
+                            {(meta as any).method && <MetaBadge label={tr.method} value={(meta as any).method} />}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <div ref={threadEndRef} />
-                </div>
-
-                {/* Reply box — only when handoff is active */}
-                {activeHandoff && (
-                  <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                    <div class="flex gap-2">
-                      <input
-                        type="text"
-                        value={reply}
-                        onInput={e => setReply((e.target as HTMLInputElement).value)}
-                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendReply()}
-                        placeholder={tr.replyPlaceholder}
-                        class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                        disabled={sending}
-                      />
-                      <button
-                        onClick={sendReply}
-                        disabled={sending || !reply.trim()}
-                        class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {sending ? tr.sending : tr.send}
-                      </button>
+                          <p class={`text-xs text-gray-400 mt-0.5 ${isUser ? '' : 'text-right'}`}>
+                            {isUser ? tr.customer : isHumanAgent ? tr.agent : tr.you} · {formatFull(msg.created_at, locale)}
+                          </p>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+                <div ref={threadEndRef} />
+              </div>
+
+              {/* Reply input — only during active handoff */}
+              {activeHandoff && (
+                <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+                  <div class="flex items-end gap-2">
+                    <input
+                      type="text"
+                      value={reply}
+                      onInput={e => setReply((e.target as HTMLInputElement).value)}
+                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendReply()}
+                      placeholder={tr.replyPlaceholder}
+                      disabled={sending}
+                      class="flex-1 px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                    />
+                    <button
+                      onClick={sendReply}
+                      disabled={sending || !reply.trim()}
+                      class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      aria-label={tr.send}
+                    >
+                      {sending ? (
+                        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
