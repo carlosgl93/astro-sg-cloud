@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
 
@@ -19,8 +19,18 @@ interface Contact {
   user_number: string;
   last_message: string;
   last_at: string;
-  unread: number;
+  count: number;
 }
+
+interface Handoff {
+  id: string;
+  whatsapp_number: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-250058155586.us-central1.run.app';
 
 const t = {
   es: {
@@ -31,6 +41,7 @@ const t = {
     selectContact: 'Selecciona una conversación para verla.',
     loading: 'Cargando...',
     you: 'Bot',
+    agent: 'Agente',
     customer: 'Cliente',
     system: 'Sistema',
     search: 'Buscar número...',
@@ -38,6 +49,15 @@ const t = {
     confidence: 'Confianza',
     category: 'Categoría',
     method: 'Método',
+    handoffActive: 'Handoff activo — estás hablando directamente con el cliente',
+    handoffBadge: 'En vivo',
+    closeHandoff: 'Cerrar handoff',
+    closeHandoffConfirm: '¿Cerrar handoff? El bot retomará la conversación.',
+    replyPlaceholder: 'Escribe tu respuesta...',
+    send: 'Enviar',
+    sending: 'Enviando...',
+    handoffClosed: 'Handoff cerrado. El bot retoma la conversación.',
+    newHandoff: (n: string) => `Nuevo handoff de +${n}`,
   },
   en: {
     title: 'Conversations',
@@ -47,6 +67,7 @@ const t = {
     selectContact: 'Select a conversation to view it.',
     loading: 'Loading...',
     you: 'Bot',
+    agent: 'Agent',
     customer: 'Customer',
     system: 'System',
     search: 'Search number...',
@@ -54,6 +75,15 @@ const t = {
     confidence: 'Confidence',
     category: 'Category',
     method: 'Method',
+    handoffActive: 'Active handoff — you are talking directly with the customer',
+    handoffBadge: 'Live',
+    closeHandoff: 'Close handoff',
+    closeHandoffConfirm: 'Close handoff? The bot will resume the conversation.',
+    replyPlaceholder: 'Type your reply...',
+    send: 'Send',
+    sending: 'Sending...',
+    handoffClosed: 'Handoff closed. Bot resumes conversation.',
+    newHandoff: (n: string) => `New handoff from +${n}`,
   },
 };
 
@@ -90,22 +120,32 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   const dashboardPath = locale === 'en' ? '/en/dashboard' : '/dashboard';
 
   const [tenantId, setTenantId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [handoffs, setHandoffs] = useState<Handoff[]>([]);
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const threadEndRef = useRef<HTMLDivElement>(null);
 
-  // Load tenant + all messages
+  const activeHandoff = selected
+    ? handoffs.find(h => h.whatsapp_number === selected && h.status === 'active')
+    : null;
+
+  // Load tenant + messages
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setLoading(false); return; }
+      setAccessToken(session.access_token);
 
       const { data: membership } = await supabase
         .from('tenant_users')
         .select('tenant_id')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .limit(1)
         .maybeSingle();
 
@@ -120,35 +160,130 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
 
       const rows = (data || []) as Message[];
       setMessages(rows);
-
-      // Build contact list: last message per user_number
-      const map = new Map<string, Contact>();
-      for (const row of rows) {
-        const existing = map.get(row.user_number);
-        map.set(row.user_number, {
-          user_number: row.user_number,
-          last_message: row.message,
-          last_at: row.created_at,
-          unread: (existing?.unread ?? 0) + 1,
-        });
-      }
-      // Sort by most recent
-      const sorted = Array.from(map.values()).sort(
-        (a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime()
-      );
-      setContacts(sorted);
+      setContacts(buildContacts(rows));
       setLoading(false);
     };
     load();
   }, []);
 
-  const filtered = search
-    ? contacts.filter(c => c.user_number.includes(search))
-    : contacts;
+  // Load active handoffs
+  useEffect(() => {
+    if (!tenantId || !accessToken) return;
+    const fetchHandoffs = async () => {
+      const res = await fetch(`${API_BASE}/api/handoffs/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.ok) setHandoffs(await res.json());
+    };
+    fetchHandoffs();
+  }, [tenantId, accessToken]);
 
-  const thread = selected
-    ? messages.filter(m => m.user_number === selected)
-    : [];
+  // Realtime: new messages
+  useEffect(() => {
+    if (!tenantId) return;
+    const channel = supabase
+      .channel('conversations-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversations',
+        filter: `tenant_id=eq.${tenantId}`,
+      }, (payload) => {
+        const msg = payload.new as Message;
+        setMessages(prev => {
+          const next = [...prev, msg];
+          setContacts(buildContacts(next));
+          return next;
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId]);
+
+  // Realtime: active_handoffs — notify on new handoff
+  useEffect(() => {
+    if (!tenantId) return;
+    const channel = supabase
+      .channel('handoffs-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'active_handoffs',
+        filter: `tenant_id=eq.${tenantId}`,
+      }, (payload) => {
+        const h = payload.new as Handoff;
+        if (payload.eventType === 'INSERT' && h.status === 'active') {
+          setHandoffs(prev => [h, ...prev.filter(x => x.id !== h.id)]);
+          triggerNotification(tr.newHandoff(h.whatsapp_number), h.whatsapp_number);
+        } else if (payload.eventType === 'UPDATE') {
+          setHandoffs(prev => prev.map(x => x.id === h.id ? h : x));
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId]);
+
+  // Scroll to bottom when thread changes
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selected, messages.length]);
+
+  function buildContacts(rows: Message[]): Contact[] {
+    const map = new Map<string, Contact>();
+    for (const row of rows) {
+      map.set(row.user_number, {
+        user_number: row.user_number,
+        last_message: row.message,
+        last_at: row.created_at,
+        count: (map.get(row.user_number)?.count ?? 0) + 1,
+      });
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime()
+    );
+  }
+
+  function triggerNotification(title: string, body: string) {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/favicon.ico' });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') new Notification(title, { body, icon: '/favicon.ico' });
+      });
+    }
+  }
+
+  async function sendReply() {
+    if (!reply.trim() || !activeHandoff || !accessToken) return;
+    setSending(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ message: reply.trim() }),
+      });
+      if (res.ok) setReply('');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function closeHandoff() {
+    if (!activeHandoff || !accessToken) return;
+    if (!confirm(tr.closeHandoffConfirm)) return;
+    await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/close`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    setHandoffs(prev => prev.map(h => h.id === activeHandoff.id ? { ...h, status: 'closed' } : h));
+  }
+
+  const filtered = search ? contacts.filter(c => c.user_number.includes(search)) : contacts;
+  const thread = selected ? messages.filter(m => m.user_number === selected) : [];
 
   if (loading) {
     return (
@@ -194,20 +329,31 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
               />
             </div>
             <div class="overflow-y-auto flex-1">
-              {filtered.map(c => (
-                <button
-                  key={c.user_number}
-                  onClick={() => setSelected(c.user_number)}
-                  class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-2 border-l-blue-500' : ''}`}
-                >
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
-                    <span class="text-xs text-gray-400 flex-shrink-0 ml-2">{formatTime(c.last_at, locale)}</span>
-                  </div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{c.last_message}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.unread)}</p>
-                </button>
-              ))}
+              {filtered.map(c => {
+                const hasHandoff = handoffs.some(h => h.whatsapp_number === c.user_number && h.status === 'active');
+                return (
+                  <button
+                    key={c.user_number}
+                    onClick={() => setSelected(c.user_number)}
+                    class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-2 border-l-blue-500' : ''}`}
+                  >
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
+                      <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                        {hasHandoff && (
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            {tr.handoffBadge}
+                          </span>
+                        )}
+                        <span class="text-xs text-gray-400">{formatTime(c.last_at, locale)}</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{c.last_message}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.count)}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -223,16 +369,35 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
             ) : (
               <>
                 {/* Thread header */}
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                  <p class="font-medium dark:text-white">+{selected}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{tr.messages(thread.length)}</p>
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
+                  <div>
+                    <p class="font-medium dark:text-white">+{selected}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{tr.messages(thread.length)}</p>
+                  </div>
+                  {activeHandoff && (
+                    <button
+                      onClick={closeHandoff}
+                      class="px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 transition-colors"
+                    >
+                      {tr.closeHandoff}
+                    </button>
+                  )}
                 </div>
+
+                {/* Handoff banner */}
+                {activeHandoff && (
+                  <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
+                    <p class="text-xs text-green-700 dark:text-green-400">{tr.handoffActive}</p>
+                  </div>
+                )}
 
                 {/* Messages */}
                 <div class="flex-1 overflow-y-auto p-4 space-y-3">
                   {thread.map(msg => {
                     const isUser = msg.role === 'user';
                     const isSystem = msg.role === 'system';
+                    const isHumanAgent = msg.role === 'assistant' && (msg.metadata as any)?.source === 'human_agent';
                     const meta = msg.metadata || {};
 
                     return (
@@ -242,35 +407,61 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                             {msg.message}
                           </div>
                         ) : (
-                          <div class={`max-w-xs lg:max-w-md ${isUser ? '' : ''}`}>
+                          <div class={`max-w-xs lg:max-w-md`}>
                             <div class={`px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap ${
                               isUser
                                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm'
-                                : 'bg-blue-600 text-white rounded-tr-sm'
+                                : isHumanAgent
+                                  ? 'bg-green-600 text-white rounded-tr-sm'
+                                  : 'bg-blue-600 text-white rounded-tr-sm'
                             }`}>
                               {msg.message}
                             </div>
-                            {/* Metadata badges */}
                             <div class={`mt-1 flex flex-wrap gap-1 ${isUser ? '' : 'justify-end'}`}>
-                              {meta.confidence != null && (
-                                <MetaBadge label={tr.confidence} value={meta.confidence} />
+                              {(meta as any).confidence != null && (
+                                <MetaBadge label={tr.confidence} value={(meta as any).confidence} />
                               )}
-                              {meta.faq_category && (
-                                <MetaBadge label={tr.category} value={meta.faq_category as string} />
+                              {(meta as any).faq_category && (
+                                <MetaBadge label={tr.category} value={(meta as any).faq_category} />
                               )}
-                              {meta.method && (
-                                <MetaBadge label={tr.method} value={meta.method as string} />
+                              {(meta as any).method && (
+                                <MetaBadge label={tr.method} value={(meta as any).method} />
                               )}
                             </div>
                             <p class={`text-xs text-gray-400 mt-1 ${isUser ? '' : 'text-right'}`}>
-                              {isUser ? tr.customer : tr.you} · {formatFull(msg.created_at, locale)}
+                              {isUser ? tr.customer : isHumanAgent ? tr.agent : tr.you} · {formatFull(msg.created_at, locale)}
                             </p>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                  <div ref={threadEndRef} />
                 </div>
+
+                {/* Reply box — only when handoff is active */}
+                {activeHandoff && (
+                  <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    <div class="flex gap-2">
+                      <input
+                        type="text"
+                        value={reply}
+                        onInput={e => setReply((e.target as HTMLInputElement).value)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendReply()}
+                        placeholder={tr.replyPlaceholder}
+                        class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        disabled={sending}
+                      />
+                      <button
+                        onClick={sendReply}
+                        disabled={sending || !reply.trim()}
+                        class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {sending ? tr.sending : tr.send}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
