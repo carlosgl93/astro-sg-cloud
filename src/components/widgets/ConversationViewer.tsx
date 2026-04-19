@@ -249,6 +249,34 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [tenantId]);
 
+  // Poll for new messages every 4s when a handoff is active
+  useEffect(() => {
+    if (!activeHandoff || !tenantId || !selected) return;
+    const poll = async () => {
+      const latest = messages.filter(m => m.user_number === selected).at(-1);
+      const since = latest?.created_at ?? new Date(0).toISOString();
+      const { data } = await supabase
+        .from('conversations')
+        .select('id, user_number, role, message, metadata, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('user_number', selected)
+        .gt('created_at', since)
+        .order('created_at', { ascending: true });
+      if (data?.length) {
+        setMessages(prev => {
+          const ids = new Set(prev.map(m => m.id));
+          const fresh = (data as Message[]).filter(m => !ids.has(m.id));
+          if (!fresh.length) return prev;
+          const next = [...prev, ...fresh];
+          setContacts(buildContacts(next));
+          return next;
+        });
+      }
+    };
+    const id = setInterval(poll, 4000);
+    return () => clearInterval(id);
+  }, [activeHandoff?.id, selected, tenantId]);
+
   // Scroll to bottom on thread change
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
