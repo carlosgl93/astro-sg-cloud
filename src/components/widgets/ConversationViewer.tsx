@@ -219,6 +219,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       }, (payload) => {
         const msg = payload.new as Message;
         setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
           const next = [...prev, msg];
           setContacts(buildContacts(next));
           return next;
@@ -287,17 +288,6 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     const text = reply.trim();
     setSending(true);
     setReply('');
-
-    // Optimistic append
-    const optimistic: Message = {
-      id: Date.now(),
-      user_number: selected,
-      role: 'assistant',
-      message: text,
-      metadata: { source: 'human_agent' },
-      created_at: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, optimistic]);
 
     try {
       await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
