@@ -67,7 +67,7 @@ analytics:
   vendors:
     googleAnalytics:
       id: "G-JMWM7VQRV4"
-      # Get it from: analytics.google.com -> Admin -> Data Streams -> your stream -> Measurement ID
+      partytown: false
 
 ui:
   theme: 'system' # Values: "system" | "light" | "dark" | "light:only" | "dark:only"
