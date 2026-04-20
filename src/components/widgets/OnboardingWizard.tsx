@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
+import FacebookSignupButton from './FacebookSignupButton';
 
 interface Props {
   apiUrl: string;
@@ -167,7 +168,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
     return <div class="flex justify-center p-12 text-gray-400">Cargando...</div>;
   }
 
-  const fbAuthUrl = `${apiUrl}/api/auth/facebook/start?redirect_uri=${encodeURIComponent(window.location.origin + '/auth-fb')}`;
+  const fbConfigId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
 
   return (
     <div class="max-w-2xl mx-auto px-4 py-8">
@@ -192,12 +193,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
               {tr.alreadyConnected}
             </div>
           ) : (
-            <a
-              href={fbAuthUrl}
-              class="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              {tr.connectBtn}
-            </a>
+            <FacebookSignupButton configId={fbConfigId} locale={locale} />
           )}
           <div class="flex justify-end pt-4">
             <button
