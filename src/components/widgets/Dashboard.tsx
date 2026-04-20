@@ -29,6 +29,8 @@ const translations = {
     whatsappConnectDesc: 'Vincula tu cuenta de WhatsApp Business',
     whatsappConnected: 'WhatsApp Conectado',
     whatsappConnectedDesc: 'Tu cuenta de WhatsApp Business esta vinculada',
+    setup: 'Configurar Bot',
+    setupDesc: 'Configura el sistema prompt, mensaje de bienvenida y más.',
     logout: 'Cerrar Sesion',
     loading: 'Cargando...',
     noTenant: 'No se encontro un negocio asociado a tu cuenta.',
@@ -53,6 +55,8 @@ const translations = {
     whatsappConnectDesc: 'Link your WhatsApp Business account',
     whatsappConnected: 'WhatsApp Connected',
     whatsappConnectedDesc: 'Your WhatsApp Business account is linked',
+    setup: 'Bot Setup',
+    setupDesc: 'Configure system prompt, welcome message and more.',
     logout: 'Log Out',
     loading: 'Loading...',
     noTenant: 'No business found associated with your account.',
@@ -164,6 +168,7 @@ function DashboardContent({ locale = 'es' }: Props) {
   const connectPath = locale === 'en' ? '/en/auth-fb' : '/auth-fb';
   const documentsPath = locale === 'en' ? '/en/documents' : '/documents';
   const conversationsPath = locale === 'en' ? '/en/conversations' : '/conversations';
+  const onboardingPath = locale === 'en' ? '/en/onboarding' : '/onboarding';
 
   const now = new Date();
   const tokenIsExpired = tokenExpiresAt !== null && tokenExpiresAt <= now;
@@ -283,6 +288,15 @@ function DashboardContent({ locale = 'es' }: Props) {
           <div class="text-3xl mb-3">💬</div>
           <h3 class="text-lg font-semibold dark:text-white mb-2">{t.conversations}</h3>
           <p class="text-sm text-gray-600 dark:text-gray-400">{t.conversationsDesc}</p>
+        </a>
+
+        <a
+          href={onboardingPath}
+          class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
+        >
+          <div class="text-3xl mb-3">⚙️</div>
+          <h3 class="text-lg font-semibold dark:text-white mb-2">{t.setup}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{t.setupDesc}</p>
         </a>
       </div>
     </div>
