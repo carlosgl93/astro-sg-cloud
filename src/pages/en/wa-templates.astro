@@ -3,7 +3,7 @@ import Layout from '~/layouts/PageLayout.astro';
 import TemplateManager from '~/components/widgets/TemplateManager';
 import HeroText from '~/components/widgets/HeroText.astro';
 
-const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL;
+const apiUrl = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-250058155586.us-central1.run.app';
 
 const metadata = {
   title: 'WhatsApp Template Management - SG Cloud',

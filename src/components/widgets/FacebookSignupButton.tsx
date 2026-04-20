@@ -138,7 +138,7 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
     } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
 
-    const apiUrl = import.meta.env.PUBLIC_WHATSAPP_API_URL || 'http://localhost:8000';
+    const apiUrl = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-250058155586.us-central1.run.app';
     const resp = await fetch(`${apiUrl}/api/auth/facebook/exchange`, {
       method: 'POST',
       headers: {
