@@ -1,6 +1,7 @@
 ---
 import Layout from '~/layouts/PageLayout.astro';
 import OnboardingWizard from '~/components/widgets/OnboardingWizard';
+import FacebookSDK from '~/components/common/FacebookSDK.astro';
 
 const metadata = {
   title: 'Configuración — SG Cloud',
@@ -12,5 +13,6 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-250058155
 
 <Layout metadata={metadata}>
   <Fragment slot="footer" />
+  <FacebookSDK />
   <OnboardingWizard client:load apiUrl={apiUrl} locale="es" />
 </Layout>
