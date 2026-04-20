@@ -1,13 +1,47 @@
 ---
 import { GoogleAnalytics } from '@astrolib/analytics';
 import { ANALYTICS } from 'astrowind:config';
+
+const gaId = ANALYTICS?.vendors?.googleAnalytics?.id;
 ---
 
-{
-  ANALYTICS?.vendors?.googleAnalytics?.id ? (
-    <GoogleAnalytics
-      id={String(ANALYTICS.vendors.googleAnalytics.id)}
-      partytown={ANALYTICS?.vendors?.googleAnalytics?.partytown}
-    />
-  ) : null
-}
+{gaId ? <GoogleAnalytics id={String(gaId)} partytown={ANALYTICS?.vendors?.googleAnalytics?.partytown} /> : null}
+
+{gaId && (
+  <script is:inline>
+    // Re-fire page_view on every Astro View Transition navigation
+    document.addEventListener('astro:page-load', () => {
+      if (typeof window.gtag !== 'function') return;
+      window.gtag('event', 'page_view', {
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    });
+
+    // Declarative event tracking: <a data-ga-event="click_whatsapp" data-ga-label="hero">
+    document.addEventListener('astro:page-load', () => {
+      document.querySelectorAll('[data-ga-event]').forEach((el) => {
+        el.addEventListener('click', () => {
+          const name = el.getAttribute('data-ga-event');
+          const label = el.getAttribute('data-ga-label') || undefined;
+          const category = el.getAttribute('data-ga-category') || undefined;
+          if (name && typeof window.gtag === 'function') {
+            window.gtag('event', name, { label, category });
+          }
+        });
+      });
+    });
+
+    // Contact form submit tracking
+    document.addEventListener('astro:page-load', () => {
+      document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', () => {
+          if (typeof window.gtag !== 'function') return;
+          window.gtag('event', 'contact_form_submit', {
+            page_location: window.location.pathname,
+          });
+        });
+      });
+    });
+  </script>
+)}

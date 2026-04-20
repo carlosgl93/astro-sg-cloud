@@ -29,8 +29,10 @@ const metadata = {
         href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageHomepage)}`,
         target: '_blank',
         icon: 'tabler:brand-whatsapp',
+        'data-ga-event': 'click_whatsapp',
+        'data-ga-label': 'hero',
       },
-      { text: t.hero.ctaSecondary, href: '#services' },
+      { text: t.hero.ctaSecondary, href: '#services', 'data-ga-event': 'click_see_services', 'data-ga-label': 'hero' },
     ]}
     image={{ src: '~/assets/images/hero-image.png', alt: 'SG Cloud Tech Solutions' }}
   >
@@ -189,11 +191,15 @@ const metadata = {
         href: `https://wa.me/56939242145?text=${encodeURIComponent(t.whatsapp.messageContact)}`,
         target: '_blank',
         icon: 'tabler:brand-whatsapp',
+        'data-ga-event': 'click_whatsapp',
+        'data-ga-label': 'cta_bottom',
       },
       {
         variant: 'secondary',
         text: t.cta.secondaryButton,
         href: '/services',
+        'data-ga-event': 'click_services',
+        'data-ga-label': 'cta_bottom',
       },
     ]}
   >
