@@ -117,7 +117,7 @@ export const translations = {
       delivery: 'Entrega a tiempo',
     },
     cta: {
-      title: '¿Listo para transformar',
+      title: '¿Listo para transformar ',
       titleBreak: 'tu negocio?',
       subtitle:
         'Hablemos sobre tu proyecto. Estamos aquí para convertir tus ideas en realidad con tecnología de vanguardia y desarrollo experto.',
