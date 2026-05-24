@@ -1,0 +1,15 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import AuthConfirm from '~/components/widgets/AuthConfirm';
+
+const metadata = {
+  title: 'Confirmando cuenta - SG Cloud',
+  robots: { index: false, follow: false },
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 py-16 sm:px-6 lg:px-8 mx-auto max-w-md">
+    <AuthConfirm client:load locale="es" />
+  </section>
+</Layout>

@@ -57,6 +57,7 @@ export default function SignupForm({ locale = 'es' }: Props) {
 
     setLoading(true);
 
+    const confirmPath = locale === 'en' ? '/en/auth/confirm' : '/auth/confirm';
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -64,6 +65,7 @@ export default function SignupForm({ locale = 'es' }: Props) {
         data: {
           business_name: businessName,
         },
+        emailRedirectTo: `${window.location.origin}${confirmPath}`,
       },
     });
 
