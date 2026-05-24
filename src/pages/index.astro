@@ -19,6 +19,19 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
+  <!-- Auth error redirect handler: Supabase sends error cases to Site URL (root) -->
+  <script>
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const error = hash.get('error');
+    const errorCode = hash.get('error_code');
+    if (error) {
+      const path = errorCode === 'otp_expired'
+        ? '/auth/confirm#error=otp_expired'
+        : `/auth/confirm#error=${error}&error_code=${errorCode || ''}`;
+      window.location.replace(path);
+    }
+  </script>
+
   <!-- Hero Widget ******************* -->
 
   <Hero
