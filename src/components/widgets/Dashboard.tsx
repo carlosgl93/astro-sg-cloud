@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
+import InstagramSignupButton from './InstagramSignupButton';
 
 interface Props {
   locale?: 'es' | 'en';
@@ -39,6 +40,12 @@ const translations = {
     tokenExpiringSoon: (days: number) => `Tu token de WhatsApp expira en ${days} dia${days !== 1 ? 's' : ''}.`,
     tokenExpiringSoonDesc: 'Reconecta tu cuenta pronto para evitar interrupciones.',
     reconnect: 'Reconectar cuenta',
+    instagramConnect: 'Conectar Instagram',
+    instagramConnectDesc: 'Vincula tu cuenta Instagram Professional',
+    instagramConnected: 'Instagram Conectado',
+    instagramConnectedDesc: 'Tu cuenta Instagram Professional esta vinculada',
+    instagramExpired: 'Tu token de Instagram ha expirado.',
+    instagramReconnect: 'Reconectar Instagram',
   },
   en: {
     welcome: 'Welcome',
@@ -65,6 +72,12 @@ const translations = {
     tokenExpiringSoon: (days: number) => `Your WhatsApp token expires in ${days} day${days !== 1 ? 's' : ''}.`,
     tokenExpiringSoonDesc: 'Reconnect your account soon to avoid interruptions.',
     reconnect: 'Reconnect account',
+    instagramConnect: 'Connect Instagram',
+    instagramConnectDesc: 'Link your Instagram Professional account',
+    instagramConnected: 'Instagram Connected',
+    instagramConnectedDesc: 'Your Instagram Professional account is linked',
+    instagramExpired: 'Your Instagram token has expired.',
+    instagramReconnect: 'Reconnect Instagram',
   },
 };
 
@@ -75,6 +88,9 @@ function DashboardContent({ locale = 'es' }: Props) {
   const [loading, setLoading] = useState(true);
   const [whatsappConnected, setWhatsappConnected] = useState(false);
   const [tokenExpiresAt, setTokenExpiresAt] = useState<Date | null>(null);
+  const [igConnected, setIgConnected] = useState(false);
+  const [igTokenExpiresAt, setIgTokenExpiresAt] = useState<Date | null>(null);
+  const [showIgModal, setShowIgModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -112,6 +128,23 @@ function DashboardContent({ locale = 'es' }: Props) {
           if (creds.token_expires_at) {
             setTokenExpiresAt(new Date(creds.token_expires_at));
           }
+        }
+
+        // Check Instagram connection
+        const apiUrl = import.meta.env.PUBLIC_API_URL;
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+        try {
+          const igResp = await fetch(`${apiUrl}/api/instagram/status`, { headers });
+          if (igResp.ok) {
+            const d = await igResp.json();
+            setIgConnected(d.instagram_connected === true);
+            if (d.token_expires_at) setIgTokenExpiresAt(new Date(d.token_expires_at));
+          }
+        } catch (e) {
+          console.error('Instagram status fetch failed:', e);
         }
 
         setLoading(false);
@@ -263,6 +296,34 @@ function DashboardContent({ locale = 'es' }: Props) {
           </p>
         </a>
 
+        <button
+          type="button"
+          onClick={() => setShowIgModal(true)}
+          class={`text-left block w-full p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border ${igConnected ? 'border-pink-300 dark:border-pink-700' : 'border-gray-200 dark:border-gray-700'}`}
+        >
+          <div class="flex items-center justify-between mb-3">
+            <svg class="w-8 h-8 text-pink-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2.2c2.7 0 3 0 4.1.1 1 0 1.7.2 2.3.5.6.2 1.1.5 1.6 1 .5.5.8 1 1 1.6.3.6.5 1.3.5 2.3.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c0 1-.2 1.7-.5 2.3-.2.6-.5 1.1-1 1.6-.5.5-1 .8-1.6 1-.6.3-1.3.5-2.3.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-1 0-1.7-.2-2.3-.5-.6-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.6-.3-.6-.5-1.3-.5-2.3-.1-1.1-.1-1.4-.1-4.1s0-3 .1-4.1c0-1 .2-1.7.5-2.3.2-.6.5-1.1 1-1.6.5-.5 1-.8 1.6-1 .6-.3 1.3-.5 2.3-.5C9 2.2 9.3 2.2 12 2.2zm0 5.1c-2.6 0-4.7 2.1-4.7 4.7s2.1 4.7 4.7 4.7 4.7-2.1 4.7-4.7-2.1-4.7-4.7-4.7zm5-.4c-.6 0-1.1.5-1.1 1.1s.5 1.1 1.1 1.1 1.1-.5 1.1-1.1-.5-1.1-1.1-1.1z" />
+            </svg>
+            {igConnected && (
+              <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 rounded-full">
+                ✓ {locale === 'en' ? 'Connected' : 'Conectado'}
+              </span>
+            )}
+          </div>
+          <h3 class="text-lg font-semibold dark:text-white mb-2">
+            {igConnected ? t.instagramConnected : t.instagramConnect}
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {igConnected ? t.instagramConnectedDesc : t.instagramConnectDesc}
+          </p>
+          {igConnected && igTokenExpiresAt && igTokenExpiresAt < new Date() && (
+            <div class="mt-3 text-sm text-red-600 dark:text-red-400">
+              {t.instagramExpired} · <span class="underline">{t.instagramReconnect}</span>
+            </div>
+          )}
+        </button>
+
         <a
           href={templatesPath}
           class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
@@ -299,6 +360,25 @@ function DashboardContent({ locale = 'es' }: Props) {
           <p class="text-sm text-gray-600 dark:text-gray-400">{t.setupDesc}</p>
         </a>
       </div>
+
+      {showIgModal && (
+        <div
+          class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowIgModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InstagramSignupButton
+              configId={import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || ''}
+              locale={locale}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
