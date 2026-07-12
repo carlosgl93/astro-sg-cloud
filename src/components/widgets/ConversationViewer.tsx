@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
+import ChannelBadge from './ChannelBadge';
 
 interface Props {
   locale?: 'es' | 'en';
@@ -13,6 +14,7 @@ interface Message {
   message: string;
   metadata: Record<string, unknown>;
   created_at: string;
+  channel?: 'whatsapp' | 'instagram';
 }
 
 interface Contact {
@@ -20,6 +22,7 @@ interface Contact {
   last_message: string;
   last_at: string;
   count: number;
+  channel: 'whatsapp' | 'instagram';
 }
 
 interface Handoff {
@@ -177,11 +180,13 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 function buildContacts(rows: Message[]): Contact[] {
   const map = new Map<string, Contact>();
   for (const row of rows) {
+    const existing = map.get(row.user_number);
     map.set(row.user_number, {
       user_number: row.user_number,
       last_message: row.message,
       last_at: row.created_at,
-      count: (map.get(row.user_number)?.count ?? 0) + 1,
+      count: (existing?.count ?? 0) + 1,
+      channel: row.channel ?? existing?.channel ?? 'whatsapp',
     });
   }
   return Array.from(map.values()).sort(
@@ -216,6 +221,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>('conversations');
   const [reply, setReply] = useState('');
+  const [channelFilter, setChannelFilter] = useState<'all' | 'whatsapp' | 'instagram'>('all');
   const [sending, setSending] = useState(false);
   const threadEndRef = useRef<HTMLDivElement>(null);
 
@@ -240,7 +246,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
 
       const { data } = await supabase
         .from('conversations')
-        .select('id, user_number, role, message, metadata, created_at')
+        .select('id, user_number, role, message, metadata, created_at, channel')
         .eq('tenant_id', membership.tenant_id)
         .order('created_at', { ascending: true });
 
@@ -313,7 +319,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       const latest = messages.filter(m => m.user_number === selected).at(-1);
       const since = latest?.created_at ?? new Date(0).toISOString();
       const { data } = await supabase
-        .from('conversations').select('id, user_number, role, message, metadata, created_at')
+        .from('conversations').select('id, user_number, role, message, metadata, created_at, channel')
         .eq('tenant_id', tenantId).eq('user_number', selected).gt('created_at', since)
         .order('created_at', { ascending: true });
       if (data?.length) {
@@ -334,6 +340,29 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selected, messages.length]);
+
+  // Refetch conversations when channelFilter changes
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    const fetchChannel = async () => {
+      let query = supabase
+        .from('conversations')
+        .select('id, user_number, role, message, metadata, created_at, channel')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: true });
+      if (channelFilter !== 'all') {
+        query = query.eq('channel', channelFilter);
+      }
+      const { data } = await query;
+      if (cancelled) return;
+      const rows = (data || []) as Message[];
+      setMessages(rows);
+      setContacts(buildContacts(rows));
+    };
+    fetchChannel();
+    return () => { cancelled = true; };
+  }, [channelFilter, tenantId]);
 
   async function sendReply() {
     if (!reply.trim() || !activeHandoff || !accessToken || !selected) return;
@@ -361,7 +390,11 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     setHandoffs(prev => prev.map(h => h.id === activeHandoff.id ? { ...h, status: 'closed' } : h));
   }
 
-  const filtered = search ? contacts.filter(c => c.user_number.includes(search)) : contacts;
+  const filtered = contacts.filter(c => {
+    if (channelFilter !== 'all' && c.channel !== channelFilter) return false;
+    if (search && !c.user_number.includes(search)) return false;
+    return true;
+  });
   const thread = selected ? messages.filter(m => m.user_number === selected) : [];
 
   if (loading) {
@@ -503,6 +536,23 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
           <>
             {/* Contact list */}
             <div class={`${showThread ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}>
+              <div class="flex gap-2 px-4 pt-3 border-b border-gray-200 dark:border-gray-700">
+                {(['all', 'whatsapp', 'instagram'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setChannelFilter(f)}
+                    class={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      channelFilter === f
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {f === 'all' ? (locale === 'es' ? 'Todos' : 'All')
+                      : f === 'whatsapp' ? 'WhatsApp'
+                      : 'Instagram'}
+                  </button>
+                ))}
+              </div>
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
                 <input type="text" placeholder={tr.search} value={search}
                   onInput={e => setSearch((e.target as HTMLInputElement).value)}
@@ -512,6 +562,12 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
               <div class="overflow-y-auto flex-1">
                 {contacts.length === 0 ? (
                   <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-12">{tr.noConversations}</p>
+                ) : filtered.length === 0 ? (
+                  <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-12">
+                    {channelFilter === 'all'
+                      ? (search ? tr.search : tr.noConversations)
+                      : (locale === 'es' ? 'Sin conversaciones en este canal' : 'No conversations on this channel')}
+                  </p>
                 ) : filtered.map(c => {
                   const hasHandoff = handoffs.some(h => h.whatsapp_number === c.user_number && h.status === 'active');
                   return (
@@ -519,7 +575,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                       class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
                     >
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
+                        <div class="flex items-center gap-2 min-w-0">
+                          <ChannelBadge channel={c.channel} />
+                          <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
+                        </div>
                         <div class="flex items-center gap-1.5 flex-shrink-0">
                           {hasHandoff && (
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
