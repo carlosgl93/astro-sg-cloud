@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
 import FacebookSignupButton from './FacebookSignupButton';
+import InstagramSignupButton from './InstagramSignupButton';
 
 interface Props {
   apiUrl: string;
@@ -19,7 +20,7 @@ interface BotConfig {
 const t = {
   es: {
     title: 'Configuración del Bot',
-    step1: 'WhatsApp',
+    step1: 'Conectar canales',
     step2: 'Documentos',
     step3: 'Bot',
     step4: 'Listo',
@@ -32,6 +33,10 @@ const t = {
     connectWaDesc: 'Vincula tu número de WhatsApp Business para comenzar a recibir mensajes.',
     connectBtn: 'Conectar con Facebook',
     alreadyConnected: '✓ WhatsApp conectado',
+    connectIg: 'Conectar Instagram',
+    connectIgDesc: 'Vincula tu cuenta profesional de Instagram para responder mensajes directos.',
+    igConnected: '✓ Instagram conectado',
+    channelSkip: 'Puedes conectar uno o ambos canales ahora. Tambien puedes hacerlo despues desde el panel.',
     docsTitle: 'Base de conocimiento',
     docsDesc: 'Sube documentos con preguntas frecuentes, políticas o información de tu negocio. El bot los usará para responder a tus clientes.',
     goToDocs: 'Ir a Documentos →',
@@ -51,7 +56,7 @@ const t = {
   },
   en: {
     title: 'Bot Setup',
-    step1: 'WhatsApp',
+    step1: 'Connect channels',
     step2: 'Documents',
     step3: 'Bot',
     step4: 'Done',
@@ -64,6 +69,10 @@ const t = {
     connectWaDesc: 'Link your WhatsApp Business number to start receiving messages.',
     connectBtn: 'Connect with Facebook',
     alreadyConnected: '✓ WhatsApp connected',
+    connectIg: 'Connect Instagram',
+    connectIgDesc: 'Link your Instagram Professional account to reply to direct messages.',
+    igConnected: '✓ Instagram connected',
+    channelSkip: 'You can connect one or both channels now. You can also do it later from the dashboard.',
     docsTitle: 'Knowledge base',
     docsDesc: 'Upload documents with FAQs, policies, or business info. The bot will use these to answer your customers.',
     goToDocs: 'Go to Documents →',
@@ -101,6 +110,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   const tr = t[locale];
   const [step, setStep] = useState(1);
   const [waConnected, setWaConnected] = useState(false);
+  const [igConnected, setIgConnected] = useState(false);
   const [config, setConfig] = useState<BotConfig>({ system_prompt: null, greeting: null, handoff_trigger: null });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -113,12 +123,13 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-      // Check WhatsApp connection
+      // Check WhatsApp + Instagram connection
       try {
-        const waResp = await fetch(`${apiUrl}/api/tenants/me`, { headers });
-        if (waResp.ok) {
-          const data = await waResp.json();
-          setWaConnected(!!data.whatsapp_connected);
+        const meResp = await fetch(`${apiUrl}/api/tenants/me`, { headers });
+        if (meResp.ok) {
+          const d = await meResp.json();
+          setWaConnected(!!d.whatsapp_connected);
+          setIgConnected(!!d.instagram_connected);
         }
       } catch (_) {}
 
@@ -169,6 +180,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   }
 
   const fbConfigId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
+  const igConfigId = import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || '';
 
   return (
     <div class="max-w-2xl mx-auto px-4 py-8">
@@ -183,18 +195,62 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
         <Step n={4} label={tr.step4} active={step === 4} done={false} />
       </div>
 
-      {/* Step 1 — WhatsApp */}
+      {/* Step 1 — Connect channels (WhatsApp + Instagram) */}
       {step === 1 && (
         <div class="space-y-6">
           <h2 class="text-xl font-semibold dark:text-white">{tr.connectWa}</h2>
           <p class="text-gray-600 dark:text-gray-400">{tr.connectWaDesc}</p>
-          {waConnected ? (
-            <div class="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-medium">
-              {tr.alreadyConnected}
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* WhatsApp card */}
+            <div class="p-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold dark:text-white">WhatsApp</h3>
+                {waConnected && (
+                  <span class="text-xs font-semibold text-green-700 dark:text-green-400 inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z" clip-rule="evenodd"/>
+                    </svg>
+                    {tr.alreadyConnected}
+                  </span>
+                )}
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{tr.connectWaDesc}</p>
+              {waConnected ? (
+                <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+                  {tr.alreadyConnected}
+                </div>
+              ) : (
+                <FacebookSignupButton configId={fbConfigId} locale={locale} />
+              )}
             </div>
-          ) : (
-            <FacebookSignupButton configId={fbConfigId} locale={locale} />
-          )}
+
+            {/* Instagram card */}
+            <div class="p-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold dark:text-white">Instagram</h3>
+                {igConnected && (
+                  <span class="text-xs font-semibold text-green-700 dark:text-green-400 inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z" clip-rule="evenodd"/>
+                    </svg>
+                    {tr.igConnected}
+                  </span>
+                )}
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{tr.connectIgDesc}</p>
+              {igConnected ? (
+                <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+                  {tr.igConnected}
+                </div>
+              ) : (
+                <InstagramSignupButton configId={igConfigId} locale={locale} />
+              )}
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500 dark:text-gray-400">{tr.channelSkip}</p>
+
           <div class="flex justify-end pt-4">
             <button
               onClick={() => setStep(2)}
