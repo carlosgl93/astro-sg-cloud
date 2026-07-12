@@ -9,7 +9,7 @@ interface Props {
 
 interface Message {
   id: number;
-  user_number: string;
+  channel_user_id: string;
   role: 'user' | 'assistant' | 'system';
   message: string;
   metadata: Record<string, unknown>;
@@ -18,7 +18,7 @@ interface Message {
 }
 
 interface Contact {
-  user_number: string;
+  channel_user_id: string;
   last_message: string;
   last_at: string;
   count: number;
@@ -180,9 +180,9 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 function buildContacts(rows: Message[]): Contact[] {
   const map = new Map<string, Contact>();
   for (const row of rows) {
-    const existing = map.get(row.user_number);
-    map.set(row.user_number, {
-      user_number: row.user_number,
+    const existing = map.get(row.channel_user_id);
+    map.set(row.channel_user_id, {
+      channel_user_id: row.channel_user_id,
       last_message: row.message,
       last_at: row.created_at,
       count: (existing?.count ?? 0) + 1,
@@ -246,7 +246,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
 
       const { data } = await supabase
         .from('conversations')
-        .select('id, user_number, role, message, metadata, created_at, channel')
+        .select('id, channel_user_id, role, message, metadata, created_at, channel')
         .eq('tenant_id', membership.tenant_id)
         .order('created_at', { ascending: true });
 
@@ -292,7 +292,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   useEffect(() => {
     if (!tenantId) return;
     const ch = supabase.channel('handoffs-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'active_handoffs', filter: `tenant_id=eq.${tenantId}` }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'handoffs', filter: `tenant_id=eq.${tenantId}` }, (payload) => {
         const h = payload.new as Handoff;
         if (payload.eventType === 'INSERT' && h.status === 'active') {
           setHandoffs(prev => [h, ...prev.filter(x => x.id !== h.id)]);
@@ -316,11 +316,11 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   useEffect(() => {
     if (!activeHandoff || !tenantId || !selected) return;
     const poll = async () => {
-      const latest = messages.filter(m => m.user_number === selected).at(-1);
+      const latest = messages.filter(m => m.channel_user_id === selected).at(-1);
       const since = latest?.created_at ?? new Date(0).toISOString();
       const { data } = await supabase
-        .from('conversations').select('id, user_number, role, message, metadata, created_at, channel')
-        .eq('tenant_id', tenantId).eq('user_number', selected).gt('created_at', since)
+        .from('conversations').select('id, channel_user_id, role, message, metadata, created_at, channel')
+        .eq('tenant_id', tenantId).eq('channel_user_id', selected).gt('created_at', since)
         .order('created_at', { ascending: true });
       if (data?.length) {
         setMessages(prev => {
@@ -348,7 +348,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     const fetchChannel = async () => {
       let query = supabase
         .from('conversations')
-        .select('id, user_number, role, message, metadata, created_at, channel')
+        .select('id, channel_user_id, role, message, metadata, created_at, channel')
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: true });
       if (channelFilter !== 'all') {
@@ -392,10 +392,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
 
   const filtered = contacts.filter(c => {
     if (channelFilter !== 'all' && c.channel !== channelFilter) return false;
-    if (search && !c.user_number.includes(search)) return false;
+    if (search && !c.channel_user_id.includes(search)) return false;
     return true;
   });
-  const thread = selected ? messages.filter(m => m.user_number === selected) : [];
+  const thread = selected ? messages.filter(m => m.channel_user_id === selected) : [];
 
   if (loading) {
     return (
@@ -569,15 +569,15 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                       : (locale === 'es' ? 'Sin conversaciones en este canal' : 'No conversations on this channel')}
                   </p>
                 ) : filtered.map(c => {
-                  const hasHandoff = handoffs.some(h => h.whatsapp_number === c.user_number && h.status === 'active');
+                  const hasHandoff = handoffs.some(h => h.whatsapp_number === c.channel_user_id && h.status === 'active');
                   return (
-                    <button key={c.user_number} onClick={() => setSelected(c.user_number)}
-                      class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.user_number ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
+                    <button key={c.channel_user_id} onClick={() => setSelected(c.channel_user_id)}
+                      class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.channel_user_id ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
                     >
                       <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 min-w-0">
                           <ChannelBadge channel={c.channel} />
-                          <span class="text-sm font-medium dark:text-white truncate">+{c.user_number}</span>
+                          <span class="text-sm font-medium dark:text-white truncate">+{c.channel_user_id}</span>
                         </div>
                         <div class="flex items-center gap-1.5 flex-shrink-0">
                           {hasHandoff && (
