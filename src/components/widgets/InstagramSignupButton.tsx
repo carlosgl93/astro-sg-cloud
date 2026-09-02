@@ -80,9 +80,6 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
     }
     setStatus('loading');
 
-    let pageId = '';
-    let igUserId = '';
-
     window.FB.login(
       (response) => {
         if (response.authResponse?.code) {
@@ -97,18 +94,16 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
           setStatus('error');
         }
       },
+      // Standard OAuth flow (no FBL Embedded Signup). The config 1619575923013415
+      // has both WA + IG features enabled, so passing config_id makes Meta show
+      // the WA flow. We bypass it and let standard OAuth consent run for the
+      // IG scopes below; backend discovers the IG Professional account via
+      // /me/accounts after the exchange.
       {
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'instagram_manage_engagement,pages_messaging',
-        extras: {
-          feature: 'instagram_embedded_signup',
-          sessionInfoListener: (info: { page_id?: string; ig_user_id?: string }) => {
-            pageId = info.page_id || '';
-            igUserId = info.ig_user_id || '';
-          },
-        },
+        scope: 'instagram_manage_engagement,pages_messaging,pages_show_list',
       }
     );
   };
