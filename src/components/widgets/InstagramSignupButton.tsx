@@ -63,7 +63,7 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ auth_code: code, redirect_uri: redirectUri, config_id: configId }),
+      body: JSON.stringify({ auth_code: code, redirect_uri: redirectUri }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
