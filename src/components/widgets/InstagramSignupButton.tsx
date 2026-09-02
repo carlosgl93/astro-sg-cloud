@@ -94,13 +94,19 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
           setStatus('error');
         }
       },
-      // Standard OAuth flow (no FBL Embedded Signup). The config 1619575923013415
-      // has both WA + IG features enabled, so passing config_id makes Meta show
-      // the WA flow. We bypass it and let standard OAuth consent run for the
-      // IG scopes below; backend discovers the IG Professional account via
-      // /me/accounts after the exchange.
+      // Standard OAuth (no FBL Embedded Signup, no config_id).
+      //
+      // Passing config_id forces the FBL popup flow, which auto-binds the
+      // resulting code to this app's auto-created system user (FB-scoped
+      // id 122098503459465178 — "Agents-Whtsapp System User"). That system
+      // user is NOT the one we manage assets on, so even after assigning
+      // @sg_cloud_cl to sg_cloud_sysuser via Business Manager, queries
+      // against the long-lived token still fail with code 100/33.
+      //
+      // Drop config_id and let standard Facebook OAuth run; the consent
+      // grants IG scopes to the authorizing user, returning a USER token
+      // whose /me/accounts resolves the linked Page → instagram_business_account.
       {
-        config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
         scope:

@@ -180,10 +180,17 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   }
 
   const fbConfigId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
+  const rawIgConfigId = import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || '';
   const igConfigId =
-    import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID ||
-    import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID ||
-    '';
+    rawIgConfigId || import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
+  if (!rawIgConfigId) {
+    // Surfaced in dev console so missing PUBLIC_INSTAGRAM_CONFIG_ID is visible
+    // instead of silently using the WA config.
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[OnboardingWizard] PUBLIC_INSTAGRAM_CONFIG_ID is unset; falling back to PUBLIC_FACEBOOK_CONFIG_ID. Set it explicitly in .env to use a dedicated IG config.'
+    );
+  }
 
   return (
     <div class="max-w-2xl mx-auto px-4 py-8">
