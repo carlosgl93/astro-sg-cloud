@@ -103,7 +103,8 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'instagram_manage_engagement,pages_messaging,pages_show_list',
+        scope:
+          'instagram_manage_engagement,pages_messaging,read_page_mailboxes',
       }
     );
   };
