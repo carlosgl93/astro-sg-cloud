@@ -107,7 +107,6 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       // grants IG scopes to the authorizing user, returning a USER token
       // whose /me/accounts resolves the linked Page → instagram_business_account.
       {
-        redirect_uri: window.location.origin + (locale === 'en' ? '/en/' : '/') + 'onboarding/',
         response_type: 'code',
         override_default_response_type: true,
         scope:
