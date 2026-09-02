@@ -52,18 +52,24 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
     return () => window.removeEventListener('facebook-sdk-ready', handler);
   }, []);
 
-  const exchange = async (code: string) => {
+  const exchange = async (code: string, pageId: string, igUserId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
     const apiUrl = import.meta.env.PUBLIC_API_URL;
-    const redirectUri = window.location.origin + (locale === 'en' ? '/en/' : '/') + 'onboarding/';
+    const redirectUri = window.location.origin + (locale === 'en' ? '/en/' : '/') + 'onboarding';
     const resp = await fetch(`${apiUrl}/api/instagram/exchange`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ auth_code: code, redirect_uri: redirectUri }),
+      body: JSON.stringify({
+        auth_code: code,
+        redirect_uri: redirectUri,
+        config_id: configId,
+        page_id: pageId,
+        ig_user_id: igUserId,
+      }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
@@ -80,10 +86,13 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
     }
     setStatus('loading');
 
+    let pageId = '';
+    let igUserId = '';
+
     window.FB.login(
       (response) => {
         if (response.authResponse?.code) {
-          exchange(response.authResponse.code)
+          exchange(response.authResponse.code, pageId, igUserId)
             .then(() => setStatus('success'))
             .catch((e) => {
               setErrorMessage(e.message || t.saveError);
@@ -94,23 +103,18 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
           setStatus('error');
         }
       },
-      // Standard OAuth (no FBL Embedded Signup, no config_id).
-      //
-      // Passing config_id forces the FBL popup flow, which auto-binds the
-      // resulting code to this app's auto-created system user (FB-scoped
-      // id 122098503459465178 — "Agents-Whtsapp System User"). That system
-      // user is NOT the one we manage assets on, so even after assigning
-      // @sg_cloud_cl to sg_cloud_sysuser via Business Manager, queries
-      // against the long-lived token still fail with code 100/33.
-      //
-      // Drop config_id and let standard Facebook OAuth run; the consent
-      // grants IG scopes to the authorizing user, returning a USER token
-      // whose /me/accounts resolves the linked Page → instagram_business_account.
       {
+        config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        scope:
-          'instagram_manage_engagement,pages_messaging,read_page_mailboxes',
+        scope: 'instagram_manage_engagement,pages_messaging',
+        extras: {
+          feature: 'instagram_embedded_signup',
+          sessionInfoListener: (info: { page_id?: string; ig_user_id?: string }) => {
+            pageId = info.page_id || '';
+            igUserId = info.ig_user_id || '';
+          },
+        },
       }
     );
   };
