@@ -180,7 +180,10 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   }
 
   const fbConfigId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
-  const igConfigId = import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || '';
+  const igConfigId =
+    import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID ||
+    import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID ||
+    '';
 
   return (
     <div class="max-w-2xl mx-auto px-4 py-8">

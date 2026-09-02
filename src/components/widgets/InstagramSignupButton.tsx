@@ -63,7 +63,7 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ auth_code: code, redirect_uri: redirectUri }),
+      body: JSON.stringify({ auth_code: code, redirect_uri: redirectUri, config_id: configId }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
@@ -101,7 +101,7 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'instagram_basic,instagram_manage_messages,pages_show_list',
+        scope: 'instagram_manage_engagement,pages_messaging',
         extras: {
           feature: 'instagram_embedded_signup',
           sessionInfoListener: (info: { page_id?: string; ig_user_id?: string }) => {

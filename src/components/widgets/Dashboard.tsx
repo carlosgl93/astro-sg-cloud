@@ -2,6 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
 import InstagramSignupButton from './InstagramSignupButton';
+import QueueMetrics from './QueueMetrics';
+import TelemetryDashboard from './TelemetryDashboard';
 
 interface Props {
   locale?: 'es' | 'en';
@@ -359,6 +361,15 @@ function DashboardContent({ locale = 'es' }: Props) {
           <h3 class="text-lg font-semibold dark:text-white mb-2">{t.setup}</h3>
           <p class="text-sm text-gray-600 dark:text-gray-400">{t.setupDesc}</p>
         </a>
+      </div>
+
+      {/* Metrics Section */}
+      <div class="mt-8 space-y-6">
+        <h2 class="text-xl font-semibold dark:text-white">Métricas del Sistema</h2>
+        <div class="grid gap-6 md:grid-cols-2">
+          <QueueMetrics apiUrl={import.meta.env.PUBLIC_API_URL || ''} locale={locale} />
+          <TelemetryDashboard apiUrl={import.meta.env.PUBLIC_API_URL || ''} locale={locale} />
+        </div>
       </div>
 
       {showIgModal && (
