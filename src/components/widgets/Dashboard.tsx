@@ -48,6 +48,10 @@ const translations = {
     instagramConnectedDesc: 'Tu cuenta Instagram Professional esta vinculada',
     instagramExpired: 'Tu token de Instagram ha expirado.',
     instagramReconnect: 'Reconectar Instagram',
+    messengerConnect: 'Conectar Messenger',
+    messengerConnectDesc: 'Vincula tu página de Facebook para responder en Messenger',
+    messengerConnected: 'Messenger Conectado',
+    messengerConnectedDesc: 'Tu página de Facebook está vinculada para Messenger',
   },
   en: {
     welcome: 'Welcome',
@@ -80,6 +84,10 @@ const translations = {
     instagramConnectedDesc: 'Your Instagram Professional account is linked',
     instagramExpired: 'Your Instagram token has expired.',
     instagramReconnect: 'Reconnect Instagram',
+    messengerConnect: 'Connect Messenger',
+    messengerConnectDesc: 'Link your Facebook Page to answer on Messenger',
+    messengerConnected: 'Messenger Connected',
+    messengerConnectedDesc: 'Your Facebook Page is linked for Messenger',
   },
 };
 
@@ -92,6 +100,7 @@ function DashboardContent({ locale = 'es' }: Props) {
   const [tokenExpiresAt, setTokenExpiresAt] = useState<Date | null>(null);
   const [igConnected, setIgConnected] = useState(false);
   const [igTokenExpiresAt, setIgTokenExpiresAt] = useState<Date | null>(null);
+  const [messengerConnected, setMessengerConnected] = useState(false);
   const [showIgModal, setShowIgModal] = useState(false);
 
   useEffect(() => {
@@ -149,6 +158,16 @@ function DashboardContent({ locale = 'es' }: Props) {
           }
         } catch (e) {
           console.error('Instagram status fetch failed:', e);
+        }
+
+        try {
+          const msgResp = await fetch(`${apiUrl}/api/messenger/status`, { headers });
+          if (msgResp.ok) {
+            const d = await msgResp.json();
+            setMessengerConnected(d.messenger_connected === true);
+          }
+        } catch (e) {
+          console.error('Messenger status fetch failed:', e);
         }
 
         setLoading(false);
@@ -327,6 +346,28 @@ function DashboardContent({ locale = 'es' }: Props) {
             </div>
           )}
         </button>
+
+        <a
+          href={connectPath}
+          class={`block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border ${messengerConnected ? 'border-blue-300 dark:border-blue-700' : 'border-gray-200 dark:border-gray-700'}`}
+        >
+          <div class="flex items-center justify-between mb-3">
+            <svg class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.43 3.14 7.15.16.14.26.35.26.57l-.07 1.78c-.03.8.84 1.34 1.54.95l1.98-1.12c.18-.1.39-.14.6-.1 1.05.29 2.18.45 3.35.45 5.64 0 10-4.13 10-9.7S17.64 2 12 2zm1.03 13.06l-2.56-2.73-5 2.73 5.5-5.84 2.62 2.73 4.94-2.73-5.5 5.84z" />
+            </svg>
+            {messengerConnected && (
+              <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                ✓ {locale === 'en' ? 'Connected' : 'Conectado'}
+              </span>
+            )}
+          </div>
+          <h3 class="text-lg font-semibold dark:text-white mb-2">
+            {messengerConnected ? t.messengerConnected : t.messengerConnect}
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {messengerConnected ? t.messengerConnectedDesc : t.messengerConnectDesc}
+          </p>
+        </a>
 
         <a
           href={templatesPath}

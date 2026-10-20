@@ -36,6 +36,9 @@ const t = {
     connectIg: 'Conectar Instagram',
     connectIgDesc: 'Vincula tu cuenta profesional de Instagram para responder mensajes directos.',
     igConnected: '✓ Instagram conectado',
+    connectMessenger: 'Conectar Facebook Messenger',
+    connectMessengerDesc: 'Vincula tu página de Facebook para responder mensajes en Messenger.',
+    messengerConnected: '✓ Messenger conectado',
     channelSkip: 'Puedes conectar uno o ambos canales ahora. Tambien puedes hacerlo despues desde el panel.',
     docsTitle: 'Base de conocimiento',
     docsDesc:
@@ -74,6 +77,9 @@ const t = {
     connectIg: 'Connect Instagram',
     connectIgDesc: 'Link your Instagram Professional account to reply to direct messages.',
     igConnected: '✓ Instagram connected',
+    connectMessenger: 'Connect Facebook Messenger',
+    connectMessengerDesc: 'Link your Facebook Page to reply to Messenger messages.',
+    messengerConnected: '✓ Messenger connected',
     channelSkip: 'You can connect one or both channels now. You can also do it later from the dashboard.',
     docsTitle: 'Knowledge base',
     docsDesc:
@@ -115,6 +121,7 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
   const [step, setStep] = useState(1);
   const [waConnected, setWaConnected] = useState(false);
   const [igConnected, setIgConnected] = useState(false);
+  const [messengerConnected, setMessengerConnected] = useState(false);
   const [config, setConfig] = useState<BotConfig>({ system_prompt: null, greeting: null, handoff_trigger: null });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -133,6 +140,7 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
         const d = await meResp.json();
         setWaConnected(!!d.whatsapp_connected);
         setIgConnected(!!d.instagram_connected);
+        setMessengerConnected(!!d.messenger_connected);
       }
     } catch {
       // ignore
@@ -147,13 +155,14 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-      // Check WhatsApp + Instagram connection
+      // Check WhatsApp + Instagram + Messenger connection
       try {
         const meResp = await fetch(`${apiUrl}/api/tenants/me`, { headers });
         if (meResp.ok) {
           const d = await meResp.json();
           setWaConnected(!!d.whatsapp_connected);
           setIgConnected(!!d.instagram_connected);
+          setMessengerConnected(!!d.messenger_connected);
         }
       } catch {
         // ignore
@@ -293,6 +302,37 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
                 </div>
               ) : (
                 <InstagramSignupButton configId={igConfigId} locale={locale} onSuccess={refreshConnections} />
+              )}
+            </div>
+
+            {/* Facebook Messenger */}
+            <div class="p-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold dark:text-white">Facebook Messenger</h3>
+                {messengerConnected && (
+                  <span class="text-xs font-semibold text-green-700 dark:text-green-400 inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    {tr.messengerConnected}
+                  </span>
+                )}
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{tr.connectMessengerDesc}</p>
+              {messengerConnected ? (
+                <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+                  {tr.messengerConnected}
+                </div>
+              ) : (
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {locale === 'es'
+                    ? 'Se vincula automáticamente con tu Página de Facebook al conectar tu cuenta de Meta.'
+                    : 'Automatically linked with your Facebook Page when connecting your Meta account.'}
+                </p>
               )}
             </div>
           </div>

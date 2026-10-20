@@ -14,7 +14,7 @@ interface Message {
   message: string;
   metadata: Record<string, unknown>;
   created_at: string;
-  channel?: 'whatsapp' | 'instagram';
+  channel?: 'whatsapp' | 'instagram' | 'messenger';
 }
 
 interface Contact {
@@ -22,7 +22,7 @@ interface Contact {
   last_message: string;
   last_at: string;
   count: number;
-  channel: 'whatsapp' | 'instagram';
+  channel: 'whatsapp' | 'instagram' | 'messenger';
 }
 
 interface Handoff {
@@ -233,7 +233,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>('conversations');
   const [reply, setReply] = useState('');
-  const [channelFilter, setChannelFilter] = useState<'all' | 'whatsapp' | 'instagram'>('all');
+  const [channelFilter, setChannelFilter] = useState<'all' | 'whatsapp' | 'instagram' | 'messenger'>('all');
   const [sending, setSending] = useState(false);
   const threadEndRef = useRef<HTMLDivElement>(null);
 
@@ -626,7 +626,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
               class={`${showThread ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}
             >
               <div class="flex gap-2 px-4 pt-3 border-b border-gray-200 dark:border-gray-700">
-                {(['all', 'whatsapp', 'instagram'] as const).map((f) => (
+                {(['all', 'whatsapp', 'instagram', 'messenger'] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setChannelFilter(f)}
@@ -636,7 +636,15 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    {f === 'all' ? (locale === 'es' ? 'Todos' : 'All') : f === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
+                    {f === 'all'
+                      ? locale === 'es'
+                        ? 'Todos'
+                        : 'All'
+                      : f === 'whatsapp'
+                        ? 'WhatsApp'
+                        : f === 'instagram'
+                          ? 'Instagram'
+                          : 'Messenger'}
                   </button>
                 ))}
               </div>
