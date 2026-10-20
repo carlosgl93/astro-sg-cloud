@@ -46,8 +46,7 @@ const translations = {
     cancelled: 'Autorizacion cancelada o incompleta.',
     saveError: 'Error al guardar la autenticacion. Intenta de nuevo.',
     successTitle: 'Conexion Exitosa!',
-    successDesc:
-      'Tu cuenta de Facebook Business ha sido conectada exitosamente.',
+    successDesc: 'Tu cuenta de Facebook Business ha sido conectada exitosamente.',
     goToDashboard: 'Ir al Panel de Control',
     failTitle: 'Conexion Fallida',
     retry: 'Intentar de Nuevo',
@@ -63,8 +62,7 @@ const translations = {
     cancelled: 'Authorization was cancelled or incomplete.',
     saveError: 'Failed to save authentication. Please try again.',
     successTitle: 'Connection Successful!',
-    successDesc:
-      'Your Facebook Business account has been connected successfully.',
+    successDesc: 'Your Facebook Business account has been connected successfully.',
     goToDashboard: 'Go to Dashboard',
     failTitle: 'Connection Failed',
     retry: 'Try Again',
@@ -74,10 +72,7 @@ const translations = {
   },
 };
 
-const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
-  configId,
-  locale = 'es',
-}) => {
+const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({ configId, locale = 'es' }) => {
   const t = translations[locale];
   const [isSdkReady, setIsSdkReady] = useState(false);
   const [signupState, setSignupState] = useState<SignupState>('idle');
@@ -131,7 +126,9 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
   const exchangeCodeWithBackend = async (
     authCode: string,
     wabaId?: string,
-    phoneNumberId?: string
+    phoneNumberId?: string,
+    pageId?: string,
+    igUserId?: string
   ) => {
     const {
       data: { session },
@@ -149,6 +146,8 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
         auth_code: authCode,
         waba_id: wabaId || '',
         phone_number_id: phoneNumberId || '',
+        page_id: pageId || '',
+        ig_user_id: igUserId || '',
       }),
     });
 
@@ -170,14 +169,24 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
     setSignupState('loading');
     setErrorMessage('');
 
-    // Capture WABA info from Embedded Signup sessionInfoListener
+    // Capture WABA + IG info from Embedded Signup sessionInfoListener.
+    // IG fields may be absent if the dialog isn't IG-enabled — backend will
+    // discover them via /me/accounts using scopes granted in this OAuth.
     let sessionWabaId = '';
     let sessionPhoneNumberId = '';
+    let sessionPageId = '';
+    let sessionIgUserId = '';
 
     window.FB.login(
       (response: FacebookAuthResponse) => {
         if (response.authResponse && response.authResponse.code) {
-          exchangeCodeWithBackend(response.authResponse.code, sessionWabaId, sessionPhoneNumberId)
+          exchangeCodeWithBackend(
+            response.authResponse.code,
+            sessionWabaId,
+            sessionPhoneNumberId,
+            sessionPageId,
+            sessionIgUserId
+          )
             .then(() => {
               setSignupState('success');
             })
@@ -198,10 +207,17 @@ const FacebookSignupButton: FunctionalComponent<FacebookSignupButtonProps> = ({
         scope: 'whatsapp_business_management,whatsapp_business_messaging',
         extras: {
           feature: 'whatsapp_embedded_signup',
-          sessionInfoListener: (info: { waba_id?: string; phone_number_id?: string }) => {
+          sessionInfoListener: (info: {
+            waba_id?: string;
+            phone_number_id?: string;
+            page_id?: string;
+            ig_user_id?: string;
+          }) => {
             console.log('Embedded Signup session info:', info);
             sessionWabaId = info.waba_id || '';
             sessionPhoneNumberId = info.phone_number_id || '';
+            sessionPageId = info.page_id || '';
+            sessionIgUserId = info.ig_user_id || '';
           },
         },
       }

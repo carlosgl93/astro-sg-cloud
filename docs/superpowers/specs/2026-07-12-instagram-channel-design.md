@@ -102,13 +102,14 @@ Meta Embedded Signup supports a **multi-feature** config. A single popup can req
 FB.login(callback, {
   config_id: '<config with features: ["whatsapp_embedded_signup", "instagram_embedded_signup"]>',
   response_type: 'code',
-  scope: 'whatsapp_business_management,whatsapp_business_messaging,instagram_basic,instagram_manage_messages,pages_show_list',
+  scope:
+    'whatsapp_business_management,whatsapp_business_messaging,instagram_basic,instagram_manage_messages,pages_show_list',
   extras: {
     feature: ['whatsapp_embedded_signup', 'instagram_embedded_signup'],
     sessionInfoListener: (info) => {
       // info.waba_id, info.phone_number_id, info.ig_user_id, info.page_id
-    }
-  }
+    },
+  },
 });
 ```
 
@@ -126,6 +127,7 @@ FB.login(callback, {
 ### Meta prerequisites (user-facing)
 
 User must have:
+
 - Instagram Professional account
 - Connected to a Facebook Page they admin
 
@@ -186,6 +188,7 @@ class ChannelAdapter(Protocol):
 ### Webhook routing
 
 One `/webhook` endpoint, GET (verify) and POST (receive). Routes by `entry[].id` or top-level `object`:
+
 - `whatsapp-business-account` → `WhatsAppAdapter`
 - `instagram` → `InstagramAdapter`
 
@@ -197,12 +200,12 @@ Daily Cloud Run cron (or scheduled job) iterates IG and WA credentials where `to
 
 ## Error handling
 
-| Failure | Behavior |
-|---------|----------|
-| IG not professional / not linked to Page | Meta returns error, UI shows clear pre-requisite message |
-| Webhook not subscribed for IG | Dashboard banner: "Configura el webhook en Meta antes de recibir mensajes" |
-| Token refresh fails twice | `status='revoked'`, reconnect CTA in UI |
-| Meta rate limit (200/hr per Page) | Backlog with exponential retry, alert in logs |
+| Failure                                  | Behavior                                                                   |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| IG not professional / not linked to Page | Meta returns error, UI shows clear pre-requisite message                   |
+| Webhook not subscribed for IG            | Dashboard banner: "Configura el webhook en Meta antes de recibir mensajes" |
+| Token refresh fails twice                | `status='revoked'`, reconnect CTA in UI                                    |
+| Meta rate limit (200/hr per Page)        | Backlog with exponential retry, alert in logs                              |
 
 ## Testing
 

@@ -84,12 +84,7 @@ export default function LoginForm({ locale = 'es' }: Props) {
           />
         </div>
 
-        <PasswordInput
-          id="password"
-          label={t.password}
-          value={password}
-          onInput={setPassword}
-        />
+        <PasswordInput id="password" label={t.password} value={password} onInput={setPassword} />
 
         <div class="flex justify-end">
           <a href={forgotPath} class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">

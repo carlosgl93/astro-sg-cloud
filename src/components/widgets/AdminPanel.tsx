@@ -52,7 +52,9 @@ function AdminContent({ apiUrl }: Props) {
   const [createError, setCreateError] = useState('');
 
   const getHeaders = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const h: Record<string, string> = { 'Content-Type': 'application/json' };
     if (session?.access_token) h['Authorization'] = `Bearer ${session.access_token}`;
     return h;
@@ -63,14 +65,21 @@ function AdminContent({ apiUrl }: Props) {
     const headers = await getHeaders();
     try {
       const resp = await fetch(`${apiUrl}/api/backoffice/tenants`, { headers });
-      if (resp.status === 403) { setDenied(true); return; }
+      if (resp.status === 403) {
+        setDenied(true);
+        return;
+      }
       if (!resp.ok) throw new Error();
       setTenants(await resp.json());
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
     setLoading(false);
   };
 
-  useEffect(() => { loadTenants(); }, []);
+  useEffect(() => {
+    loadTenants();
+  }, []);
 
   const createTenant = async () => {
     setCreating(true);
@@ -86,34 +95,31 @@ function AdminContent({ apiUrl }: Props) {
       setShowCreate(false);
       setForm({ name: '', slug: '', owner_email: '' });
       await loadTenants();
-    } catch (_) {
+    } catch {
       setCreateError(tr.error);
     } finally {
       setCreating(false);
     }
   };
 
-  if (denied) return (
-    <div class="max-w-2xl mx-auto px-4 py-16 text-center text-red-500 font-medium">{tr.accessDenied}</div>
-  );
+  if (denied)
+    return <div class="max-w-2xl mx-auto px-4 py-16 text-center text-red-500 font-medium">{tr.accessDenied}</div>;
 
   // Wizard mode — acting on behalf of selected tenant
-  if (selectedTenant) return (
-    <div>
-      <div class="max-w-2xl mx-auto px-4 pt-6">
-        <button
-          onClick={() => setSelectedTenant(null)}
-          class="text-sm text-blue-600 hover:underline mb-4 block"
-        >
-          {tr.back}
-        </button>
-        <p class="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">
-          Configurando: {selectedTenant.name}
-        </p>
+  if (selectedTenant)
+    return (
+      <div>
+        <div class="max-w-2xl mx-auto px-4 pt-6">
+          <button onClick={() => setSelectedTenant(null)} class="text-sm text-blue-600 hover:underline mb-4 block">
+            {tr.back}
+          </button>
+          <p class="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">
+            Configurando: {selectedTenant.name}
+          </p>
+        </div>
+        <OnboardingWizard apiUrl={apiUrl} locale="es" tenantId={selectedTenant.id} />
       </div>
-      <OnboardingWizard apiUrl={apiUrl} locale="es" tenantId={selectedTenant.id} />
-    </div>
-  );
+    );
 
   return (
     <div class="max-w-5xl mx-auto px-4 py-8">
@@ -142,7 +148,7 @@ function AdminContent({ apiUrl }: Props) {
                   <label class="block text-sm font-medium dark:text-gray-300">{label}</label>
                   <input
                     type={key === 'owner_email' ? 'email' : 'text'}
-                    value={(form as any)[key]}
+                    value={form[key as keyof typeof form]}
                     onInput={(e) => setForm({ ...form, [key]: (e.target as HTMLInputElement).value })}
                     placeholder={placeholder}
                     class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
@@ -153,7 +159,10 @@ function AdminContent({ apiUrl }: Props) {
             {createError && <p class="text-sm text-red-500">{createError}</p>}
             <div class="flex justify-end gap-3 pt-2">
               <button
-                onClick={() => { setShowCreate(false); setCreateError(''); }}
+                onClick={() => {
+                  setShowCreate(false);
+                  setCreateError('');
+                }}
                 class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {tr.cancel}
@@ -180,7 +189,9 @@ function AdminContent({ apiUrl }: Props) {
             <thead class="bg-gray-50 dark:bg-slate-800">
               <tr>
                 {[tr.name, tr.plan, tr.owner, tr.created, ''].map((h) => (
-                  <th key={h} class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">{h}</th>
+                  <th key={h} class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>

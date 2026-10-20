@@ -16,6 +16,7 @@ PUBLIC_FACEBOOK_CONFIG_ID=your-config-id-here
 ```
 
 Get these from:
+
 - **App ID**: [Facebook App Settings](https://developers.facebook.com/apps/YOUR_APP_ID/settings/basic/)
 - **Config ID**: [Embedded Signup Configuration](https://developers.facebook.com/apps/YOUR_APP_ID/whatsapp-business/wa-embedded-signup/)
 
@@ -119,7 +120,7 @@ import FacebookSDK from '~/components/common/FacebookSDK.astro';
 Preact interactive component for the signup button:
 
 - **Props**: `configId` (Facebook Embedded Signup Configuration ID)
-- **States**: 
+- **States**:
   - `idle` - Initial state
   - `loading` - Authorization in progress
   - `success` - Auth code saved successfully
@@ -169,21 +170,21 @@ export const processFacebookAuth = functions.firestore
   .onCreate(async (snap, context) => {
     const authData = snap.data();
     const { authCode } = authData;
-    
+
     try {
       // Exchange code for access token
       const response = await fetch(
         `https://graph.facebook.com/v24.0/oauth/access_token?` +
-        `client_id=${process.env.FACEBOOK_APP_ID}&` +
-        `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
-        `code=${authCode}`
+          `client_id=${process.env.FACEBOOK_APP_ID}&` +
+          `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
+          `code=${authCode}`
       );
-      
+
       const { access_token } = await response.json();
-      
+
       // Store in Secret Manager or secure location
       // ...
-      
+
       // Update status
       await snap.ref.update({ status: 'completed' });
     } catch (error) {
@@ -215,20 +216,24 @@ export const processFacebookAuth = functions.firestore
 ## Troubleshooting
 
 **"Facebook SDK not loaded"**
+
 - Check `PUBLIC_FACEBOOK_APP_ID` is set
 - Verify network requests aren't blocked
 - Check browser console for errors
 
 **Authorization popup blocked**
+
 - Ensure HTTPS in production
 - Check browser popup blocker settings
 
 **"Failed to save authentication"**
+
 - Verify Firestore is configured correctly
 - Check Firestore security rules
 - Inspect browser console for Firebase errors
 
 **Code already used**
+
 - Authorization codes are single-use
 - Backend must exchange code immediately
 - User needs to re-authorize if code expires

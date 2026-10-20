@@ -103,7 +103,7 @@ const TemplateManagerContent: FunctionalComponent<TemplateManagerProps> = ({ api
     setCreating(true);
     setFeedback(null);
     try {
-      const components: { type: string; text: string }[] = [];
+      const components: { type: string; text: string; format?: string }[] = [];
       if (createHeader.trim()) {
         components.push({ type: 'HEADER', format: 'TEXT', text: createHeader.trim() });
       }
@@ -255,7 +255,9 @@ const TemplateManagerContent: FunctionalComponent<TemplateManagerProps> = ({ api
                   <tr key={t.id || t.name} class="hover:bg-gray-50 dark:hover:bg-slate-800/50">
                     <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{t.name}</td>
                     <td class="px-4 py-3">
-                      <span class={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusBadge(t.status)}`}>
+                      <span
+                        class={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusBadge(t.status)}`}
+                      >
                         {t.status}
                       </span>
                     </td>
@@ -297,7 +299,11 @@ const TemplateManagerContent: FunctionalComponent<TemplateManagerProps> = ({ api
             </div>
             <div>
               <label class={labelClass}>Category</label>
-              <select value={createCategory} onChange={(e) => setCreateCategory((e.target as HTMLSelectElement).value)} class={inputClass}>
+              <select
+                value={createCategory}
+                onChange={(e) => setCreateCategory((e.target as HTMLSelectElement).value)}
+                class={inputClass}
+              >
                 <option value="MARKETING">MARKETING</option>
                 <option value="UTILITY">UTILITY</option>
                 <option value="AUTHENTICATION">AUTHENTICATION</option>
@@ -305,7 +311,11 @@ const TemplateManagerContent: FunctionalComponent<TemplateManagerProps> = ({ api
             </div>
             <div>
               <label class={labelClass}>Language</label>
-              <select value={createLanguage} onChange={(e) => setCreateLanguage((e.target as HTMLSelectElement).value)} class={inputClass}>
+              <select
+                value={createLanguage}
+                onChange={(e) => setCreateLanguage((e.target as HTMLSelectElement).value)}
+                class={inputClass}
+              >
                 <optgroup label="Spanish">
                   <option value="es">es — Spanish (Chile / generic)</option>
                   <option value="es_AR">es_AR — Spanish (Argentina)</option>

@@ -42,7 +42,9 @@ export default function ResetPasswordForm({ locale = 'es' }: Props) {
 
   useEffect(() => {
     // Supabase fires PASSWORD_RECOVERY event when the recovery token in the URL is valid
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessionReady(true);
       }
@@ -117,12 +119,7 @@ export default function ResetPasswordForm({ locale = 'es' }: Props) {
       )}
 
       <form onSubmit={handleSubmit} class="space-y-4">
-        <PasswordInput
-          id="password"
-          label={t.password}
-          value={password}
-          onInput={setPassword}
-        />
+        <PasswordInput id="password" label={t.password} value={password} onInput={setPassword} />
 
         <PasswordInput
           id="confirmPassword"

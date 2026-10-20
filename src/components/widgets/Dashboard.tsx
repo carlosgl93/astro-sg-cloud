@@ -134,7 +134,9 @@ function DashboardContent({ locale = 'es' }: Props) {
 
         // Check Instagram connection
         const apiUrl = import.meta.env.PUBLIC_API_URL;
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const headers: Record<string, string> = session?.access_token
           ? { Authorization: `Bearer ${session.access_token}` }
           : {};
@@ -379,14 +381,8 @@ function DashboardContent({ locale = 'es' }: Props) {
           role="dialog"
           aria-modal="true"
         >
-          <div
-            class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <InstagramSignupButton
-              configId={import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || ''}
-              locale={locale}
-            />
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <InstagramSignupButton configId={import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || ''} locale={locale} />
           </div>
         </div>
       )}

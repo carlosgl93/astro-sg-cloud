@@ -152,12 +152,7 @@ export default function SignupForm({ locale = 'es' }: Props) {
           />
         </div>
 
-        <PasswordInput
-          id="password"
-          label={t.password}
-          value={password}
-          onInput={setPassword}
-        />
+        <PasswordInput id="password" label={t.password} value={password} onInput={setPassword} />
 
         <PasswordInput
           id="confirmPassword"

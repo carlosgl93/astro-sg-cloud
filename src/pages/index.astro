@@ -25,9 +25,10 @@ const metadata = {
     const error = hash.get('error');
     const errorCode = hash.get('error_code');
     if (error) {
-      const path = errorCode === 'otp_expired'
-        ? '/auth/confirm#error=otp_expired'
-        : `/auth/confirm#error=${error}&error_code=${errorCode || ''}`;
+      const path =
+        errorCode === 'otp_expired'
+          ? '/auth/confirm#error=otp_expired'
+          : `/auth/confirm#error=${error}&error_code=${errorCode || ''}`;
       window.location.replace(path);
     }
   </script>

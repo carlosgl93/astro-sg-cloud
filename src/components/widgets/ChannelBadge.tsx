@@ -1,4 +1,6 @@
-interface Props { channel: 'whatsapp' | 'instagram'; }
+interface Props {
+  channel: 'whatsapp' | 'instagram';
+}
 
 const labels = {
   whatsapp: { text: 'WA', classes: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
@@ -7,9 +9,5 @@ const labels = {
 
 export default function ChannelBadge({ channel }: Props) {
   const cfg = labels[channel];
-  return (
-    <span class={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${cfg.classes}`}>
-      {cfg.text}
-    </span>
-  );
+  return <span class={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${cfg.classes}`}>{cfg.text}</span>;
 }

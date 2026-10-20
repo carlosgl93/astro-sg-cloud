@@ -87,7 +87,12 @@ const t = {
     statAvgMessages: 'Mensajes por handoff',
     statClosedBy: 'Cerrados por',
     minutes: (n: number) => `${n} min`,
-    closedByLabels: { agent_ui: 'UI Web', agent_telegram: 'Telegram', auto_expired: 'Expirado', system: 'Sistema' } as Record<string, string>,
+    closedByLabels: {
+      agent_ui: 'UI Web',
+      agent_telegram: 'Telegram',
+      auto_expired: 'Expirado',
+      system: 'Sistema',
+    } as Record<string, string>,
     duration: (h: Handoff) => {
       if (!h.closed_at) return '—';
       const mins = Math.round((new Date(h.closed_at).getTime() - new Date(h.created_at).getTime()) / 60000);
@@ -130,7 +135,12 @@ const t = {
     statAvgMessages: 'Msgs per handoff',
     statClosedBy: 'Closed by',
     minutes: (n: number) => `${n} min`,
-    closedByLabels: { agent_ui: 'Web UI', agent_telegram: 'Telegram', auto_expired: 'Expired', system: 'System' } as Record<string, string>,
+    closedByLabels: {
+      agent_ui: 'Web UI',
+      agent_telegram: 'Telegram',
+      auto_expired: 'Expired',
+      system: 'System',
+    } as Record<string, string>,
     duration: (h: Handoff) => {
       if (!h.closed_at) return '—';
       const mins = Math.round((new Date(h.closed_at).getTime() - new Date(h.created_at).getTime()) / 60000);
@@ -145,7 +155,8 @@ function formatTime(iso: string, locale: string) {
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-CL', { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 0)
+    return d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-CL', { hour: '2-digit', minute: '2-digit' });
   if (diffDays === 1) return locale === 'en' ? 'Yesterday' : 'Ayer';
   if (diffDays < 7) return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL', { weekday: 'short' });
   return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL', { day: 'numeric', month: 'short' });
@@ -153,7 +164,10 @@ function formatTime(iso: string, locale: string) {
 
 function formatFull(iso: string, locale: string) {
   return new Date(iso).toLocaleString(locale === 'en' ? 'en-US' : 'es-CL', {
-    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -189,9 +203,7 @@ function buildContacts(rows: Message[]): Contact[] {
       channel: row.channel ?? existing?.channel ?? 'whatsapp',
     });
   }
-  return Array.from(map.values()).sort(
-    (a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime()
-  );
+  return Array.from(map.values()).sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime());
 }
 
 function triggerNotification(title: string, body: string) {
@@ -199,7 +211,7 @@ function triggerNotification(title: string, body: string) {
   if (Notification.permission === 'granted') {
     new Notification(title, { body, icon: '/favicon.ico' });
   } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(p => {
+    Notification.requestPermission().then((p) => {
       if (p === 'granted') new Notification(title, { body, icon: '/favicon.ico' });
     });
   }
@@ -226,22 +238,31 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   const threadEndRef = useRef<HTMLDivElement>(null);
 
   const showThread = selected !== null;
-  const activeHandoff = selected
-    ? handoffs.find(h => h.whatsapp_number === selected && h.status === 'active')
-    : null;
+  const activeHandoff = selected ? handoffs.find((h) => h.whatsapp_number === selected && h.status === 'active') : null;
 
   // Load tenant + messages
   useEffect(() => {
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setLoading(false); return; }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        setLoading(false);
+        return;
+      }
       setAccessToken(session.access_token);
 
       const { data: membership } = await supabase
-        .from('tenant_users').select('tenant_id')
-        .eq('user_id', session.user.id).limit(1).maybeSingle();
+        .from('tenant_users')
+        .select('tenant_id')
+        .eq('user_id', session.user.id)
+        .limit(1)
+        .maybeSingle();
 
-      if (!membership?.tenant_id) { setLoading(false); return; }
+      if (!membership?.tenant_id) {
+        setLoading(false);
+        return;
+      }
       setTenantId(membership.tenant_id);
 
       const { data } = await supabase
@@ -267,65 +288,91 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   useEffect(() => {
     if (!accessToken) return;
     const headers = { Authorization: `Bearer ${accessToken}` };
-    fetch(`${API_BASE}/api/handoffs/`, { headers }).then(r => r.ok ? r.json() : []).then(setHandoffs);
-    fetch(`${API_BASE}/api/handoffs/history`, { headers }).then(r => r.ok ? r.json() : []).then(setHistory);
-    fetch(`${API_BASE}/api/handoffs/stats`, { headers }).then(r => r.ok ? r.json() : null).then(setStats);
+    fetch(`${API_BASE}/api/handoffs/`, { headers })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setHandoffs);
+    fetch(`${API_BASE}/api/handoffs/history`, { headers })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setHistory);
+    fetch(`${API_BASE}/api/handoffs/stats`, { headers })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setStats);
   }, [accessToken]);
 
   // Realtime: conversations
   useEffect(() => {
     if (!tenantId) return;
-    const ch = supabase.channel('conv-rt')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations', filter: `tenant_id=eq.${tenantId}` }, (payload) => {
-        const msg = payload.new as Message;
-        setMessages(prev => {
-          if (prev.some(m => m.id === msg.id)) return prev;
-          const next = [...prev, msg];
-          setContacts(buildContacts(next));
-          return next;
-        });
-      }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const ch = supabase
+      .channel('conv-rt')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'conversations', filter: `tenant_id=eq.${tenantId}` },
+        (payload) => {
+          const msg = payload.new as Message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            const next = [...prev, msg];
+            setContacts(buildContacts(next));
+            return next;
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [tenantId]);
 
   // Realtime: handoffs
   useEffect(() => {
     if (!tenantId) return;
-    const ch = supabase.channel('handoffs-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'handoffs', filter: `tenant_id=eq.${tenantId}` }, (payload) => {
-        const h = payload.new as Handoff;
-        if (payload.eventType === 'INSERT' && h.status === 'active') {
-          setHandoffs(prev => [h, ...prev.filter(x => x.id !== h.id)]);
-          triggerNotification(tr.newHandoff(h.whatsapp_number), h.whatsapp_number);
-        } else if (payload.eventType === 'UPDATE') {
-          setHandoffs(prev => prev.map(x => x.id === h.id ? h : x));
-          if (h.status !== 'active') {
-            setHistory(prev => [h, ...prev.filter(x => x.id !== h.id)]);
-            // refresh stats
-            if (accessToken) {
-              fetch(`${API_BASE}/api/handoffs/stats`, { headers: { Authorization: `Bearer ${accessToken}` } })
-                .then(r => r.ok ? r.json() : null).then(setStats);
+    const ch = supabase
+      .channel('handoffs-rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'handoffs', filter: `tenant_id=eq.${tenantId}` },
+        (payload) => {
+          const h = payload.new as Handoff;
+          if (payload.eventType === 'INSERT' && h.status === 'active') {
+            setHandoffs((prev) => [h, ...prev.filter((x) => x.id !== h.id)]);
+            triggerNotification(tr.newHandoff(h.whatsapp_number), h.whatsapp_number);
+          } else if (payload.eventType === 'UPDATE') {
+            setHandoffs((prev) => prev.map((x) => (x.id === h.id ? h : x)));
+            if (h.status !== 'active') {
+              setHistory((prev) => [h, ...prev.filter((x) => x.id !== h.id)]);
+              // refresh stats
+              if (accessToken) {
+                fetch(`${API_BASE}/api/handoffs/stats`, { headers: { Authorization: `Bearer ${accessToken}` } })
+                  .then((r) => (r.ok ? r.json() : null))
+                  .then(setStats);
+              }
             }
           }
         }
-      }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [tenantId, accessToken]);
 
   // Poll during active handoff
   useEffect(() => {
     if (!activeHandoff || !tenantId || !selected) return;
     const poll = async () => {
-      const latest = messages.filter(m => m.channel_user_id === selected).at(-1);
+      const latest = messages.filter((m) => m.channel_user_id === selected).at(-1);
       const since = latest?.created_at ?? new Date(0).toISOString();
       const { data } = await supabase
-        .from('conversations').select('id, channel_user_id, role, message, metadata, created_at, channel')
-        .eq('tenant_id', tenantId).eq('channel_user_id', selected).gt('created_at', since)
+        .from('conversations')
+        .select('id, channel_user_id, role, message, metadata, created_at, channel')
+        .eq('tenant_id', tenantId)
+        .eq('channel_user_id', selected)
+        .gt('created_at', since)
         .order('created_at', { ascending: true });
       if (data?.length) {
-        setMessages(prev => {
-          const ids = new Set(prev.map(m => m.id));
-          const fresh = (data as Message[]).filter(m => !ids.has(m.id));
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          const fresh = (data as Message[]).filter((m) => !ids.has(m.id));
           if (!fresh.length) return prev;
           const next = [...prev, ...fresh];
           setContacts(buildContacts(next));
@@ -361,7 +408,9 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       setContacts(buildContacts(rows));
     };
     fetchChannel();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [channelFilter, tenantId]);
 
   async function sendReply() {
@@ -387,15 +436,15 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    setHandoffs(prev => prev.map(h => h.id === activeHandoff.id ? { ...h, status: 'closed' } : h));
+    setHandoffs((prev) => prev.map((h) => (h.id === activeHandoff.id ? { ...h, status: 'closed' } : h)));
   }
 
-  const filtered = contacts.filter(c => {
+  const filtered = contacts.filter((c) => {
     if (channelFilter !== 'all' && c.channel !== channelFilter) return false;
     if (search && !c.channel_user_id.includes(search)) return false;
     return true;
   });
-  const thread = selected ? messages.filter(m => m.channel_user_id === selected) : [];
+  const thread = selected ? messages.filter((m) => m.channel_user_id === selected) : [];
 
   if (loading) {
     return (
@@ -411,9 +460,16 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       {/* Top bar */}
       <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
         {showThread && tab === 'conversations' ? (
-          <button onClick={() => setSelected(null)} class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">{tr.backToList}</button>
+          <button
+            onClick={() => setSelected(null)}
+            class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0"
+          >
+            {tr.backToList}
+          </button>
         ) : (
-          <a href={dashboardPath} class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">{tr.back}</a>
+          <a href={dashboardPath} class="text-sm text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">
+            {tr.back}
+          </a>
         )}
         <div class="flex-1 min-w-0">
           {showThread && tab === 'conversations' ? (
@@ -421,7 +477,8 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
               <p class="font-semibold text-sm dark:text-white truncate">+{selected}</p>
               {activeHandoff && (
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium flex-shrink-0">
-                  <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />{tr.handoffBadge}
+                  <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  {tr.handoffBadge}
                 </span>
               )}
             </div>
@@ -430,7 +487,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
           )}
         </div>
         {showThread && activeHandoff && tab === 'conversations' && (
-          <button onClick={closeHandoff} class="flex-shrink-0 px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+          <button
+            onClick={closeHandoff}
+            class="flex-shrink-0 px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+          >
             {tr.closeHandoff}
           </button>
         )}
@@ -439,15 +499,20 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
       {/* Tabs */}
       {(!showThread || tab !== 'conversations') && (
         <div class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
-          {(['conversations', 'history', 'stats'] as Tab[]).map(t => (
+          {(['conversations', 'history', 'stats'] as Tab[]).map((t) => (
             <button
               key={t}
-              onClick={() => { setTab(t); setSelected(null); }}
+              onClick={() => {
+                setTab(t);
+                setSelected(null);
+              }}
               class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
             >
               {t === 'conversations' ? tr.tabConversations : t === 'history' ? tr.tabHistory : tr.tabStats}
               {t === 'conversations' && handoffs.length > 0 && (
-                <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full">{handoffs.length}</span>
+                <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full">
+                  {handoffs.length}
+                </span>
               )}
             </button>
           ))}
@@ -456,7 +521,6 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
 
       {/* Body */}
       <div class="flex flex-1 min-h-0 overflow-hidden">
-
         {/* STATS TAB */}
         {tab === 'stats' && (
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
@@ -471,8 +535,20 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                   <StatCard label={tr.statExpired} value={stats.expired} />
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <StatCard label={tr.statAvgDuration} value={stats.avg_duration_minutes != null ? tr.minutes(Math.round(stats.avg_duration_minutes)) : '—'} />
-                  <StatCard label={tr.statAvgResponse} value={stats.avg_first_response_minutes != null ? tr.minutes(Math.round(stats.avg_first_response_minutes)) : '—'} />
+                  <StatCard
+                    label={tr.statAvgDuration}
+                    value={
+                      stats.avg_duration_minutes != null ? tr.minutes(Math.round(stats.avg_duration_minutes)) : '—'
+                    }
+                  />
+                  <StatCard
+                    label={tr.statAvgResponse}
+                    value={
+                      stats.avg_first_response_minutes != null
+                        ? tr.minutes(Math.round(stats.avg_first_response_minutes))
+                        : '—'
+                    }
+                  />
                   <StatCard label={tr.statAvgMessages} value={stats.avg_messages ?? '—'} />
                 </div>
                 {Object.keys(stats.closed_by).length > 0 && (
@@ -483,7 +559,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                         <div key={k} class="flex items-center gap-2">
                           <span class="text-sm dark:text-white w-28 flex-shrink-0">{tr.closedByLabels[k] ?? k}</span>
                           <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full" style={`width:${Math.round(v / stats.total * 100)}%`} />
+                            <div
+                              class="bg-blue-500 h-2 rounded-full"
+                              style={`width:${Math.round((v / stats.total) * 100)}%`}
+                            />
                           </div>
                           <span class="text-sm text-gray-500 dark:text-gray-400 w-6 text-right">{v}</span>
                         </div>
@@ -505,24 +584,32 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
               <table class="w-full text-sm">
                 <thead class="bg-gray-50 dark:bg-gray-800 sticky top-0">
                   <tr>
-                    {['Usuario', 'Estado', 'Duración', 'Mensajes', 'Cerrado por', 'Fecha'].map(h => (
-                      <th key={h} class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
+                    {['Usuario', 'Estado', 'Duración', 'Mensajes', 'Cerrado por', 'Fecha'].map((h) => (
+                      <th key={h} class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  {history.map(h => (
+                  {history.map((h) => (
                     <tr key={h.id} class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                       <td class="px-4 py-3 font-mono text-xs dark:text-white">+{h.whatsapp_number}</td>
                       <td class="px-4 py-3">
-                        <span class={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${h.status === 'closed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'}`}>
+                        <span
+                          class={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${h.status === 'closed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'}`}
+                        >
                           {h.status === 'closed' ? 'Cerrado' : 'Expirado'}
                         </span>
                       </td>
                       <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{tr.duration(h)}</td>
                       <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{h.message_count ?? 0}</td>
-                      <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{h.closed_by ? (tr.closedByLabels[h.closed_by] ?? h.closed_by) : '—'}</td>
-                      <td class="px-4 py-3 text-gray-400 text-xs">{h.closed_at ? formatTime(h.closed_at, locale) : '—'}</td>
+                      <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        {h.closed_by ? (tr.closedByLabels[h.closed_by] ?? h.closed_by) : '—'}
+                      </td>
+                      <td class="px-4 py-3 text-gray-400 text-xs">
+                        {h.closed_at ? formatTime(h.closed_at, locale) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -535,7 +622,9 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
         {tab === 'conversations' && (
           <>
             {/* Contact list */}
-            <div class={`${showThread ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}>
+            <div
+              class={`${showThread ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}
+            >
               <div class="flex gap-2 px-4 pt-3 border-b border-gray-200 dark:border-gray-700">
                 {(['all', 'whatsapp', 'instagram'] as const).map((f) => (
                   <button
@@ -547,15 +636,16 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    {f === 'all' ? (locale === 'es' ? 'Todos' : 'All')
-                      : f === 'whatsapp' ? 'WhatsApp'
-                      : 'Instagram'}
+                    {f === 'all' ? (locale === 'es' ? 'Todos' : 'All') : f === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
                   </button>
                 ))}
               </div>
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input type="text" placeholder={tr.search} value={search}
-                  onInput={e => setSearch((e.target as HTMLInputElement).value)}
+                <input
+                  type="text"
+                  placeholder={tr.search}
+                  value={search}
+                  onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -565,34 +655,45 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                 ) : filtered.length === 0 ? (
                   <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-12">
                     {channelFilter === 'all'
-                      ? (search ? tr.search : tr.noConversations)
-                      : (locale === 'es' ? 'Sin conversaciones en este canal' : 'No conversations on this channel')}
+                      ? search
+                        ? tr.search
+                        : tr.noConversations
+                      : locale === 'es'
+                        ? 'Sin conversaciones en este canal'
+                        : 'No conversations on this channel'}
                   </p>
-                ) : filtered.map(c => {
-                  const hasHandoff = handoffs.some(h => h.whatsapp_number === c.channel_user_id && h.status === 'active');
-                  return (
-                    <button key={c.channel_user_id} onClick={() => setSelected(c.channel_user_id)}
-                      class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.channel_user_id ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
-                    >
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                          <ChannelBadge channel={c.channel} />
-                          <span class="text-sm font-medium dark:text-white truncate">+{c.channel_user_id}</span>
+                ) : (
+                  filtered.map((c) => {
+                    const hasHandoff = handoffs.some(
+                      (h) => h.whatsapp_number === c.channel_user_id && h.status === 'active'
+                    );
+                    return (
+                      <button
+                        key={c.channel_user_id}
+                        onClick={() => setSelected(c.channel_user_id)}
+                        class={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${selected === c.channel_user_id ? 'bg-white dark:bg-gray-800 border-l-4 border-l-blue-500' : 'hover:bg-white dark:hover:bg-gray-800'}`}
+                      >
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <ChannelBadge channel={c.channel} />
+                            <span class="text-sm font-medium dark:text-white truncate">+{c.channel_user_id}</span>
+                          </div>
+                          <div class="flex items-center gap-1.5 flex-shrink-0">
+                            {hasHandoff && (
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                {tr.handoffBadge}
+                              </span>
+                            )}
+                            <span class="text-xs text-gray-400">{formatTime(c.last_at, locale)}</span>
+                          </div>
                         </div>
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                          {hasHandoff && (
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full font-medium">
-                              <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />{tr.handoffBadge}
-                            </span>
-                          )}
-                          <span class="text-xs text-gray-400">{formatTime(c.last_at, locale)}</span>
-                        </div>
-                      </div>
-                      <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{c.last_message}</p>
-                      <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.count)}</p>
-                    </button>
-                  );
-                })}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{c.last_message}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{tr.messages(c.count)}</p>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -600,7 +701,10 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
             <div class={`${showThread ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-h-0 bg-white dark:bg-gray-900`}>
               {!selected ? (
                 <div class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600">
-                  <div class="text-center"><div class="text-4xl mb-3">💬</div><p class="text-sm">{tr.selectContact}</p></div>
+                  <div class="text-center">
+                    <div class="text-4xl mb-3">💬</div>
+                    <p class="text-sm">{tr.selectContact}</p>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -611,27 +715,37 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                     </div>
                   )}
                   <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                    {thread.map(msg => {
+                    {thread.map((msg) => {
                       const isUser = msg.role === 'user';
                       const isSystem = msg.role === 'system';
-                      const isHumanAgent = msg.role === 'assistant' && (msg.metadata as any)?.source === 'human_agent';
+                      const isHumanAgent = msg.role === 'assistant' && msg.metadata?.source === 'human_agent';
                       const meta = msg.metadata || {};
                       return (
-                        <div key={msg.id} class={`flex ${isUser ? 'justify-start' : isSystem ? 'justify-center' : 'justify-end'}`}>
+                        <div
+                          key={msg.id}
+                          class={`flex ${isUser ? 'justify-start' : isSystem ? 'justify-center' : 'justify-end'}`}
+                        >
                           {isSystem ? (
-                            <div class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-400 text-xs rounded-full max-w-[80%] text-center">{msg.message}</div>
+                            <div class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-400 text-xs rounded-full max-w-[80%] text-center">
+                              {msg.message}
+                            </div>
                           ) : (
                             <div class="max-w-[80%]">
-                              <div class={`px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${isUser ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-sm' : isHumanAgent ? 'bg-green-600 text-white rounded-tr-sm' : 'bg-blue-600 text-white rounded-tr-sm'}`}>
+                              <div
+                                class={`px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${isUser ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-tl-sm' : isHumanAgent ? 'bg-green-600 text-white rounded-tr-sm' : 'bg-blue-600 text-white rounded-tr-sm'}`}
+                              >
                                 {msg.message}
                               </div>
                               <div class={`mt-1 flex flex-wrap gap-1 ${isUser ? '' : 'justify-end'}`}>
-                                {(meta as any).confidence != null && <MetaBadge label={tr.confidence} value={(meta as any).confidence} />}
-                                {(meta as any).faq_category && <MetaBadge label={tr.category} value={(meta as any).faq_category} />}
-                                {(meta as any).method && <MetaBadge label={tr.method} value={(meta as any).method} />}
+                                {meta.confidence != null && <MetaBadge label={tr.confidence} value={meta.confidence} />}
+                                {Boolean(meta.faq_category) && (
+                                  <MetaBadge label={tr.category} value={meta.faq_category} />
+                                )}
+                                {Boolean(meta.method) && <MetaBadge label={tr.method} value={meta.method} />}
                               </div>
                               <p class={`text-xs text-gray-400 mt-0.5 ${isUser ? '' : 'text-right'}`}>
-                                {isUser ? tr.customer : isHumanAgent ? tr.agent : tr.you} · {formatFull(msg.created_at, locale)}
+                                {isUser ? tr.customer : isHumanAgent ? tr.agent : tr.you} ·{' '}
+                                {formatFull(msg.created_at, locale)}
                               </p>
                             </div>
                           )}
@@ -643,13 +757,18 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                   {activeHandoff && (
                     <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
                       <div class="flex items-end gap-2">
-                        <input type="text" value={reply}
-                          onInput={e => setReply((e.target as HTMLInputElement).value)}
-                          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendReply()}
-                          placeholder={tr.replyPlaceholder} disabled={sending}
+                        <input
+                          type="text"
+                          value={reply}
+                          onInput={(e) => setReply((e.target as HTMLInputElement).value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendReply()}
+                          placeholder={tr.replyPlaceholder}
+                          disabled={sending}
                           class="flex-1 px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                         />
-                        <button onClick={sendReply} disabled={sending || !reply.trim()}
+                        <button
+                          onClick={sendReply}
+                          disabled={sending || !reply.trim()}
                           class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                           {sending ? (

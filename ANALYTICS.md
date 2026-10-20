@@ -17,7 +17,7 @@ Edit `src/config.yaml`:
 analytics:
   vendors:
     googleAnalytics:
-      id: "G-XXXXXXXXXX"   # ← paste your Measurement ID here
+      id: 'G-XXXXXXXXXX' # ← paste your Measurement ID here
 ```
 
 Then rebuild and deploy:
@@ -34,13 +34,13 @@ firebase deploy --only hosting --project sg-cloud-cefee
 
 ## 4. What is tracked automatically
 
-| Event | When |
-|---|---|
-| `page_view` | Every page load, including View Transitions navigations |
-| `contact_form_submit` | Any `<form>` submit on the site |
-| `click_whatsapp` | WhatsApp CTA buttons (hero + bottom CTA) |
-| `click_see_services` | "Ver servicios" scroll link in hero |
-| `click_services` | "Nuestros servicios" link in bottom CTA |
+| Event                 | When                                                    |
+| --------------------- | ------------------------------------------------------- |
+| `page_view`           | Every page load, including View Transitions navigations |
+| `contact_form_submit` | Any `<form>` submit on the site                         |
+| `click_whatsapp`      | WhatsApp CTA buttons (hero + bottom CTA)                |
+| `click_see_services`  | "Ver servicios" scroll link in hero                     |
+| `click_services`      | "Nuestros servicios" link in bottom CTA                 |
 
 ## 5. Adding custom events
 
@@ -49,16 +49,11 @@ firebase deploy --only hosting --project sg-cloud-cefee
 Add `data-ga-event` to any element — no JS needed:
 
 ```astro
-<a
-  href="https://wa.me/56939242145"
-  data-ga-event="click_whatsapp"
-  data-ga-label="pricing_page"
->
-  Contáctanos
-</a>
+<a href="https://wa.me/56939242145" data-ga-event="click_whatsapp" data-ga-label="pricing_page"> Contáctanos </a>
 ```
 
 Available attributes:
+
 - `data-ga-event` — event name (required)
 - `data-ga-label` — label to identify where on the page (optional)
 - `data-ga-category` — category grouping (optional)
@@ -78,25 +73,33 @@ trackEvent('handoff_initiated', { label: 'cubrejardin', value: 1 });
 ## 6. Key reports to watch in GA4
 
 ### Traffic overview
+
 **Reports** → **Acquisition** → **Traffic acquisition**
+
 - Shows where visitors come from (organic search, direct, referral, social)
 
 ### Page engagement
+
 **Reports** → **Engagement** → **Pages and screens**
+
 - Which pages get the most views and time on page
 - High bounce on `/services` = content isn't converting
 
 ### Events
+
 **Reports** → **Engagement** → **Events**
+
 - See all tracked events with counts
 - `click_whatsapp` count = lead intent signal
 - `contact_form_submit` = direct lead conversions
 
 ### Conversions (set up recommended)
+
 **Admin** → **Events** → mark `contact_form_submit` and `click_whatsapp` as **conversions**
 Then use **Reports** → **Acquisition** → **Traffic acquisition** filtered to conversions to know which channels drive leads.
 
 ### Realtime
+
 **Reports** → **Realtime** — useful for testing after deploys
 
 ## 7. Linking to Google Search Console (recommended)

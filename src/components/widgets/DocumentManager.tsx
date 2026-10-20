@@ -193,7 +193,10 @@ function DocumentManagerContent({ apiUrl, locale = 'es' }: Props) {
       )}
 
       {showForm && (
-        <form onSubmit={handleCreate} class="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <form
+          onSubmit={handleCreate}
+          class="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+        >
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="docTitle">
               {t.docTitle}
@@ -260,7 +263,9 @@ function DocumentManagerContent({ apiUrl, locale = 'es' }: Props) {
                       {doc.total_chunks} {t.chunks}
                     </span>
                   )}
-                  {doc.created_at && <span>{new Date(doc.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL')}</span>}
+                  {doc.created_at && (
+                    <span>{new Date(doc.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL')}</span>
+                  )}
                 </div>
               </div>
               <button

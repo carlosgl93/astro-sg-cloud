@@ -38,11 +38,13 @@ const t = {
     igConnected: '✓ Instagram conectado',
     channelSkip: 'Puedes conectar uno o ambos canales ahora. Tambien puedes hacerlo despues desde el panel.',
     docsTitle: 'Base de conocimiento',
-    docsDesc: 'Sube documentos con preguntas frecuentes, políticas o información de tu negocio. El bot los usará para responder a tus clientes.',
+    docsDesc:
+      'Sube documentos con preguntas frecuentes, políticas o información de tu negocio. El bot los usará para responder a tus clientes.',
     goToDocs: 'Ir a Documentos →',
     botTitle: 'Configurar el bot',
     systemPromptLabel: 'Instrucción del sistema (system prompt)',
-    systemPromptPlaceholder: 'Eres un asistente amable de [Nombre de tu negocio]. Ayudas a los clientes con preguntas sobre nuestros productos y servicios...',
+    systemPromptPlaceholder:
+      'Eres un asistente amable de [Nombre de tu negocio]. Ayudas a los clientes con preguntas sobre nuestros productos y servicios...',
     greetingLabel: 'Mensaje de bienvenida',
     greetingPlaceholder: '¡Hola! Soy el asistente virtual de [Tu negocio]. ¿En qué puedo ayudarte hoy?',
     handoffLabel: 'Frase para transferir a humano',
@@ -74,13 +76,15 @@ const t = {
     igConnected: '✓ Instagram connected',
     channelSkip: 'You can connect one or both channels now. You can also do it later from the dashboard.',
     docsTitle: 'Knowledge base',
-    docsDesc: 'Upload documents with FAQs, policies, or business info. The bot will use these to answer your customers.',
+    docsDesc:
+      'Upload documents with FAQs, policies, or business info. The bot will use these to answer your customers.',
     goToDocs: 'Go to Documents →',
     botTitle: 'Configure the bot',
     systemPromptLabel: 'System prompt',
-    systemPromptPlaceholder: 'You are a friendly assistant for [Business Name]. You help customers with questions about our products and services...',
+    systemPromptPlaceholder:
+      'You are a friendly assistant for [Business Name]. You help customers with questions about our products and services...',
     greetingLabel: 'Welcome message',
-    greetingPlaceholder: 'Hi! I\'m the virtual assistant for [Your Business]. How can I help you today?',
+    greetingPlaceholder: "Hi! I'm the virtual assistant for [Your Business]. How can I help you today?",
     handoffLabel: 'Human handoff phrase',
     handoffPlaceholder: 'talk to a person, agent, human',
     handoffHint: 'If the customer writes something similar, the bot will transfer the conversation to a human agent.',
@@ -106,7 +110,7 @@ function Step({ n, label, active, done }: { n: number; label: string; active: bo
   );
 }
 
-function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
+function WizardContent({ apiUrl, locale = 'es' }: Props) {
   const tr = t[locale];
   const [step, setStep] = useState(1);
   const [waConnected, setWaConnected] = useState(false);
@@ -117,9 +121,29 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const refreshConnections = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+    try {
+      const meResp = await fetch(`${apiUrl}/api/tenants/me`, { headers });
+      if (meResp.ok) {
+        const d = await meResp.json();
+        setWaConnected(!!d.whatsapp_connected);
+        setIgConnected(!!d.instagram_connected);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 
@@ -131,7 +155,9 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
           setWaConnected(!!d.whatsapp_connected);
           setIgConnected(!!d.instagram_connected);
         }
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
 
       // Load existing bot config
       try {
@@ -144,7 +170,9 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
             handoff_trigger: data.handoff_trigger || '',
           });
         }
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
 
       setLoading(false);
     };
@@ -155,7 +183,9 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
     setSaving(true);
     setSaveError('');
     setSaveSuccess(false);
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 
@@ -168,7 +198,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
       if (!resp.ok) throw new Error(await resp.text());
       setSaveSuccess(true);
       setTimeout(() => setStep(4), 600);
-    } catch (_) {
+    } catch {
       setSaveError(tr.error);
     } finally {
       setSaving(false);
@@ -180,15 +210,12 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
   }
 
   const fbConfigId = import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
-  const rawIgConfigId = import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || '';
-  const igConfigId =
-    rawIgConfigId || import.meta.env.PUBLIC_FACEBOOK_CONFIG_ID || '';
-  if (!rawIgConfigId) {
-    // Surfaced in dev console so missing PUBLIC_INSTAGRAM_CONFIG_ID is visible
-    // instead of silently using the WA config.
-    // eslint-disable-next-line no-console
+  // Empty IG config_id => standard OAuth path (drop config_id from FB.login).
+  // Don't fall back to PUBLIC_FACEBOOK_CONFIG_ID — that's WhatsApp and breaks IG.
+  const igConfigId = import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || '';
+  if (!igConfigId) {
     console.warn(
-      '[OnboardingWizard] PUBLIC_INSTAGRAM_CONFIG_ID is unset; falling back to PUBLIC_FACEBOOK_CONFIG_ID. Set it explicitly in .env to use a dedicated IG config.'
+      '[OnboardingWizard] PUBLIC_INSTAGRAM_CONFIG_ID is unset; using standard OAuth (no FBL config_id). Set it in .env to force the FBL popup path.'
     );
   }
 
@@ -219,7 +246,11 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
                 {waConnected && (
                   <span class="text-xs font-semibold text-green-700 dark:text-green-400 inline-flex items-center gap-1">
                     <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z" clip-rule="evenodd"/>
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     {tr.alreadyConnected}
                   </span>
@@ -235,14 +266,21 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
               )}
             </div>
 
-            {/* Instagram card */}
+            {/* Instagram card — separate FBL popup with config 1619575923013415
+                + extras.feature: 'instagram_embedded_signup'. WA-only config
+                (874698424915335) silently drops instagram_basic, so IG scopes
+                cannot ride on the WA dialog. */}
             <div class="p-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 space-y-3">
               <div class="flex items-center justify-between">
                 <h3 class="text-base font-semibold dark:text-white">Instagram</h3>
                 {igConnected && (
                   <span class="text-xs font-semibold text-green-700 dark:text-green-400 inline-flex items-center gap-1">
                     <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z" clip-rule="evenodd"/>
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4L8.5 12l6.8-6.7a1 1 0 011.4 0z"
+                        clip-rule="evenodd"
+                      />
                     </svg>
                     {tr.igConnected}
                   </span>
@@ -254,7 +292,7 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
                   {tr.igConnected}
                 </div>
               ) : (
-                <InstagramSignupButton configId={igConfigId} locale={locale} />
+                <InstagramSignupButton configId={igConfigId} locale={locale} onSuccess={refreshConnections} />
               )}
             </div>
           </div>
@@ -284,7 +322,10 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
             {tr.goToDocs}
           </a>
           <div class="flex justify-between pt-4">
-            <button onClick={() => setStep(1)} class="px-5 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <button
+              onClick={() => setStep(1)}
+              class="px-5 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
               ← {tr.back}
             </button>
             <button
@@ -339,7 +380,10 @@ function WizardContent({ apiUrl, locale = 'es', tenantId }: Props) {
           {saveError && <p class="text-sm text-red-500">{saveError}</p>}
 
           <div class="flex justify-between pt-4">
-            <button onClick={() => setStep(2)} class="px-5 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <button
+              onClick={() => setStep(2)}
+              class="px-5 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
               ← {tr.back}
             </button>
             <button

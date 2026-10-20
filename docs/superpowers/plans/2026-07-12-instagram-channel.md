@@ -7,6 +7,7 @@
 **Architecture:** Channel adapter pattern. `InstagramAdapter` mirrors the existing `WhatsappService` interface. A registry routes OAuth, webhooks, and outbound sends by channel. Conversations and handoffs get a `channel` discriminator. Frontend adds IG signup, dashboard card, and inbox filter.
 
 **Tech Stack:**
+
 - Backend: FastAPI (Python), Supabase (Postgres), Meta Graph API
 - Frontend: Astro + Preact + Supabase JS
 - Deploy: Cloud Run + Firebase Hosting
@@ -14,10 +15,10 @@
 **Spec:** `docs/superpowers/specs/2026-07-12-instagram-channel-design.md`
 
 **Repos touched:**
+
 - `cubrejardin-bot/` — FastAPI backend
 - `astro-sg-cloud/` — Astro frontend
 - `cubrejardin-bot/sql/migrations/` — Supabase migrations (apply via Supabase SQL editor or `supabase db push`)
-
 
 ---
 
@@ -26,6 +27,7 @@
 ### Task A.1: Migration to add `channel` discriminator
 
 **Files:**
+
 - Create: `cubrejardin-bot/sql/migrations/006_instagram_channel.sql`
 - Modify: `cubrejardin-bot/services/whatsapp_service.py` (if it joins on `user_number`)
 - Modify: `cubrejardin-bot/api/handoffs.py` (if it filters `user_number`)
@@ -110,7 +112,6 @@ git add sql/migrations/006_instagram_channel.sql
 git commit -m "feat(db): add channel discriminator + instagram credentials table"
 ```
 
-
 ---
 
 ## Phase B — Backend: channel adapter pattern
@@ -118,6 +119,7 @@ git commit -m "feat(db): add channel discriminator + instagram credentials table
 ### Task B.1: Define ChannelAdapter protocol
 
 **Files:**
+
 - Create: `cubrejardin-bot/channels/__init__.py`
 - Create: `cubrejardin-bot/channels/base.py`
 - Create: `cubrejardin-bot/tests/test_channel_base.py`
@@ -250,12 +252,12 @@ git add channels/ tests/test_channel_base.py
 git commit -m "feat(channels): add ChannelAdapter protocol + registry"
 ```
 
-
 ---
 
 ### Task B.2: Wrap WhatsApp service as adapter
 
 **Files:**
+
 - Create: `cubrejardin-bot/channels/whatsapp.py`
 - Modify: `cubrejardin-bot/main.py` (register the adapter at startup)
 - Create: `cubrejardin-bot/tests/test_whatsapp_adapter.py`
@@ -401,12 +403,12 @@ git add channels/whatsapp.py main.py tests/test_whatsapp_adapter.py
 git commit -m "feat(channels): wrap whatsapp service as ChannelAdapter"
 ```
 
-
 ---
 
 ### Task B.3: InstagramAdapter skeleton (no real API yet)
 
 **Files:**
+
 - Create: `cubrejardin-bot/channels/instagram.py`
 - Create: `cubrejardin-bot/tests/test_instagram_adapter.py`
 
@@ -526,7 +528,6 @@ git add channels/instagram.py tests/test_instagram_adapter.py
 git commit -m "feat(channels): InstagramAdapter skeleton with webhook parsing"
 ```
 
-
 ---
 
 ## Phase C — Backend: Instagram OAuth
@@ -534,6 +535,7 @@ git commit -m "feat(channels): InstagramAdapter skeleton with webhook parsing"
 ### Task C.1: OAuth exchange endpoint
 
 **Files:**
+
 - Create: `cubrejardin-bot/api/instagram.py`
 - Create: `cubrejardin-bot/tests/test_instagram_exchange.py`
 
@@ -733,12 +735,12 @@ git add api/instagram.py main.py tests/test_instagram_exchange.py
 git commit -m "feat(api): POST /api/instagram/exchange — OAuth flow"
 ```
 
-
 ---
 
 ### Task C.2: Status endpoint
 
 **Files:**
+
 - Create: `cubrejardin-bot/api/instagram.py` (extend)
 
 - [ ] **Step 1: Write failing test**
@@ -820,12 +822,12 @@ git add api/instagram.py tests/test_instagram_exchange.py
 git commit -m "feat(api): GET /api/instagram/status"
 ```
 
-
 ---
 
 ### Task C.3: Token refresh job
 
 **Files:**
+
 - Create: `cubrejardin-bot/jobs/refresh_instagram_tokens.py`
 - Create: `cubrejardin-bot/tests/test_instagram_token_refresh.py`
 
@@ -973,7 +975,6 @@ git add jobs/refresh_instagram_tokens.py tests/test_instagram_token_refresh.py
 git commit -m "feat(jobs): daily IG token refresh cron"
 ```
 
-
 ---
 
 ## Phase D — Backend: Webhook integration
@@ -981,6 +982,7 @@ git commit -m "feat(jobs): daily IG token refresh cron"
 ### Task D.1: Extend webhook router to detect IG payloads
 
 **Files:**
+
 - Modify: `cubrejardin-bot/api/webhooks.py`
 - Modify: `cubrejardin-bot/main.py` (if verify endpoint exists)
 
@@ -1181,12 +1183,12 @@ git add api/webhooks.py api/webhooks_helpers.py tests/test_webhook_ig.py tests/t
 git commit -m "feat(webhooks): unified router for whatsapp + instagram"
 ```
 
-
 ---
 
 ### Task D.2: Extend /api/tenants/me with IG status
 
 **Files:**
+
 - Modify: `cubrejardin-bot/api/tenants.py` (locate the `/api/tenants/me` handler)
 
 - [ ] **Step 1: Write failing test**
@@ -1242,6 +1244,7 @@ git commit -m "feat(api): /tenants/me exposes instagram_connected"
 Required by frontend Task F.2 step 5. Without this, clicking the "Instagram" tab returns the full WA-only list.
 
 **Files:**
+
 - Modify: `cubrejardin-bot/api/conversations.py`
 - Create: `cubrejardin-bot/tests/test_conversations_filter.py`
 
@@ -1346,8 +1349,6 @@ git add api/conversations.py tests/test_conversations_filter.py
 git commit -m "feat(api): conversations list supports channel filter"
 ```
 
-
-
 ---
 
 ## Phase E — Frontend: connection flow
@@ -1355,6 +1356,7 @@ git commit -m "feat(api): conversations list supports channel filter"
 ### Task E.1: InstagramSignupButton component
 
 **Files:**
+
 - Create: `astro-sg-cloud/src/components/widgets/InstagramSignupButton.tsx`
 
 - [ ] **Step 1: Create the component**
@@ -1436,7 +1438,9 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
   }, []);
 
   const exchange = async (code: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
     const apiUrl = import.meta.env.PUBLIC_API_URL;
     const redirectUri = window.location.origin + (locale === 'en' ? '/en/' : '/') + 'onboarding';
@@ -1501,8 +1505,10 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       <div class="p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 rounded-lg text-center">
         <h3 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-2">{t.successTitle}</h3>
         <p class="text-green-800 dark:text-green-200 mb-4">{t.successDesc}</p>
-        <a href={locale === 'en' ? '/en/dashboard' : '/dashboard'}
-           class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">
+        <a
+          href={locale === 'en' ? '/en/dashboard' : '/dashboard'}
+          class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-green-600 hover:bg-green-700 rounded-md"
+        >
           {t.goToDashboard}
         </a>
       </div>
@@ -1513,8 +1519,13 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
     return (
       <div class="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg text-center">
         <p class="text-red-700 dark:text-red-300 mb-4">{errorMessage}</p>
-        <button onClick={() => { setStatus('idle'); setErrorMessage(''); }}
-                class="px-6 py-3 text-base font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">
+        <button
+          onClick={() => {
+            setStatus('idle');
+            setErrorMessage('');
+          }}
+          class="px-6 py-3 text-base font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
+        >
           {locale === 'es' ? 'Reintentar' : 'Retry'}
         </button>
       </div>
@@ -1553,12 +1564,12 @@ git add src/components/widgets/InstagramSignupButton.tsx
 git commit -m "feat(frontend): InstagramSignupButton component"
 ```
 
-
 ---
 
 ### Task E.2: Dashboard IG card
 
 **Files:**
+
 - Modify: `astro-sg-cloud/src/components/widgets/Dashboard.tsx`
 
 - [ ] **Step 1: Add i18n strings**
@@ -1599,23 +1610,32 @@ In the JSX, just below the WhatsApp card, add a parallel block:
 ```tsx
 <a
   href="#"
-  onClick={(e) => { e.preventDefault(); /* open IG signup modal */ }}
+  onClick={(e) => {
+    e.preventDefault(); /* open IG signup modal */
+  }}
   class={`block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border ${igConnected ? 'border-pink-300 dark:border-pink-700' : 'border-gray-200 dark:border-gray-700'}`}
 >
   <div class="flex items-center gap-3 mb-3">
     <svg class="w-8 h-8 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2.2c2.7 0 3 0 4.1.1 1 0 1.7.2 2.3.5.6.2 1.1.5 1.6 1 .5.5.8 1 1 1.6.3.6.5 1.3.5 2.3.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c0 1-.2 1.7-.5 2.3-.2.6-.5 1.1-1 1.6-.5.5-1 .8-1.6 1-.6.3-1.3.5-2.3.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-1 0-1.7-.2-2.3-.5-.6-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.6-.3-.6-.5-1.3-.5-2.3-.1-1.1-.1-1.4-.1-4.1s0-3 .1-4.1c0-1 .2-1.7.5-2.3.2-.6.5-1.1 1-1.6.5-.5 1-.8 1.6-1 .6-.3 1.3-.5 2.3-.5C9 2.2 9.3 2.2 12 2.2zm0 5.1c-2.6 0-4.7 2.1-4.7 4.7s2.1 4.7 4.7 4.7 4.7-2.1 4.7-4.7-2.1-4.7-4.7-4.7zm5-.4c-.6 0-1.1.5-1.1 1.1s.5 1.1 1.1 1.1 1.1-.5 1.1-1.1-.5-1.1-1.1-1.1z"/>
+      <path d="M12 2.2c2.7 0 3 0 4.1.1 1 0 1.7.2 2.3.5.6.2 1.1.5 1.6 1 .5.5.8 1 1 1.6.3.6.5 1.3.5 2.3.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c0 1-.2 1.7-.5 2.3-.2.6-.5 1.1-1 1.6-.5.5-1 .8-1.6 1-.6.3-1.3.5-2.3.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-1 0-1.7-.2-2.3-.5-.6-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.6-.3-.6-.5-1.3-.5-2.3-.1-1.1-.1-1.4-.1-4.1s0-3 .1-4.1c0-1 .2-1.7.5-2.3.2-.6.5-1.1 1-1.6.5-.5 1-.8 1.6-1 .6-.3 1.3-.5 2.3-.5C9 2.2 9.3 2.2 12 2.2zm0 5.1c-2.6 0-4.7 2.1-4.7 4.7s2.1 4.7 4.7 4.7 4.7-2.1 4.7-4.7-2.1-4.7-4.7-4.7zm5-.4c-.6 0-1.1.5-1.1 1.1s.5 1.1 1.1 1.1 1.1-.5 1.1-1.1-.5-1.1-1.1-1.1z" />
     </svg>
-    <h3 class="text-lg font-semibold dark:text-white">
-      {igConnected ? t.instagramConnected : t.instagramConnect}
-    </h3>
+    <h3 class="text-lg font-semibold dark:text-white">{igConnected ? t.instagramConnected : t.instagramConnect}</h3>
   </div>
   <p class="text-sm text-gray-600 dark:text-gray-400">
     {igConnected ? t.instagramConnectedDesc : t.instagramConnectDesc}
   </p>
   {igConnected && igTokenExpiresAt && igTokenExpiresAt < new Date() && (
     <div class="mt-3 text-sm text-red-600 dark:text-red-400">
-      {t.instagramExpired} · <button class="underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>{t.instagramReconnect}</button>
+      {t.instagramExpired} ·{' '}
+      <button
+        class="underline"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        {t.instagramReconnect}
+      </button>
     </div>
   )}
 </a>
@@ -1624,16 +1644,15 @@ In the JSX, just below the WhatsApp card, add a parallel block:
 For "open IG signup modal" — wire this to `InstagramSignupButton` rendered in a portal/modal. For MVP, link directly to the IG signup modal rendered below the dashboard grid:
 
 ```tsx
-{showIgModal && (
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowIgModal(false)}>
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md" onClick={(e) => e.stopPropagation()}>
-      <InstagramSignupButton
-        configId={import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || ''}
-        locale={locale}
-      />
+{
+  showIgModal && (
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowIgModal(false)}>
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md" onClick={(e) => e.stopPropagation()}>
+        <InstagramSignupButton configId={import.meta.env.PUBLIC_INSTAGRAM_CONFIG_ID || ''} locale={locale} />
+      </div>
     </div>
-  </div>
-)}
+  );
+}
 ```
 
 Add `const [showIgModal, setShowIgModal] = useState(false);` and replace the `#` href with the modal opener.
@@ -1648,12 +1667,12 @@ git add src/components/widgets/Dashboard.tsx
 git commit -m "feat(dashboard): instagram connect card"
 ```
 
-
 ---
 
 ### Task E.3: Onboarding wizard — step 1 becomes multi-channel
 
 **Files:**
+
 - Modify: `astro-sg-cloud/src/components/widgets/OnboardingWizard.tsx`
 
 - [ ] **Step 1: Refactor step 1 to query both `/tenants/me` channels**
@@ -1689,7 +1708,6 @@ git add src/components/widgets/OnboardingWizard.tsx
 git commit -m "feat(onboarding): step 1 connects whatsapp + instagram"
 ```
 
-
 ---
 
 ## Phase F — Frontend: inbox filter
@@ -1697,12 +1715,15 @@ git commit -m "feat(onboarding): step 1 connects whatsapp + instagram"
 ### Task F.1: ChannelBadge component
 
 **Files:**
+
 - Create: `astro-sg-cloud/src/components/widgets/ChannelBadge.tsx`
 
 - [ ] **Step 1: Create the component**
 
 ```tsx
-interface Props { channel: 'whatsapp' | 'instagram'; }
+interface Props {
+  channel: 'whatsapp' | 'instagram';
+}
 
 const labels = {
   whatsapp: { text: 'WA', classes: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
@@ -1711,11 +1732,7 @@ const labels = {
 
 export default function ChannelBadge({ channel }: Props) {
   const cfg = labels[channel];
-  return (
-    <span class={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${cfg.classes}`}>
-      {cfg.text}
-    </span>
-  );
+  return <span class={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${cfg.classes}`}>{cfg.text}</span>;
 }
 ```
 
@@ -1727,12 +1744,12 @@ git add src/components/widgets/ChannelBadge.tsx
 git commit -m "feat(conversations): ChannelBadge component"
 ```
 
-
 ---
 
 ### Task F.2: Add channel filter to ConversationViewer
 
 **Files:**
+
 - Modify: `astro-sg-cloud/src/components/widgets/ConversationViewer.tsx`
 
 - [ ] **Step 1: Add filter state**
@@ -1752,14 +1769,10 @@ Right above the contact search box, add:
       key={f}
       onClick={() => setChannelFilter(f)}
       class={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-        channelFilter === f
-          ? 'border-blue-600 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700'
+        channelFilter === f ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
       }`}
     >
-      {f === 'all' ? (locale === 'es' ? 'Todos' : 'All')
-        : f === 'whatsapp' ? 'WhatsApp'
-        : 'Instagram'}
+      {f === 'all' ? (locale === 'es' ? 'Todos' : 'All') : f === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
     </button>
   ))}
 </div>
@@ -1770,9 +1783,7 @@ Right above the contact search box, add:
 When computing the displayed `contacts`, filter by `channel`:
 
 ```tsx
-const filteredContacts = contacts.filter((c) =>
-  channelFilter === 'all' || c.channel === channelFilter
-);
+const filteredContacts = contacts.filter((c) => channelFilter === 'all' || c.channel === channelFilter);
 ```
 
 The `Contact` interface needs a `channel` field added:
@@ -1796,9 +1807,8 @@ In the contact list render, next to the name/number, add `<ChannelBadge channel=
 Where the conversations list is fetched, pass `?channel=<filter>` when filter is not "all":
 
 ```tsx
-const url = channelFilter === 'all'
-  ? `${apiUrl}/api/conversations`
-  : `${apiUrl}/api/conversations?channel=${channelFilter}`;
+const url =
+  channelFilter === 'all' ? `${apiUrl}/api/conversations` : `${apiUrl}/api/conversations?channel=${channelFilter}`;
 ```
 
 If `/api/conversations` does not yet support a channel filter, that backend endpoint must be updated to filter by channel. (Treated as part of this task — adjust the backend handler.)
@@ -1812,7 +1822,6 @@ pnpm build
 git add src/components/widgets/ConversationViewer.tsx
 git commit -m "feat(conversations): channel filter + badge in inbox"
 ```
-
 
 ---
 
@@ -1884,18 +1893,17 @@ Trigger handoff keyword. Verify handoff appears in conversations, agent can repl
 
 Manipulate `token_expires_at` in Supabase to be in the past. Verify dashboard shows expiry banner.
 
-
 ---
 
 ## Risks & mitigations (live reference)
 
-| Risk | Mitigation |
-|------|------------|
+| Risk                                                                   | Mitigation                                                                                                                                            |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Meta `sessionInfoListener` returns different field names than expected | Verify field names in Task E.1; have backend accept either `ig_user_id` / `page_id` or `page_id` from extras and resolve IG via `/me/accounts` lookup |
-| Existing WA code references `user_number` without channel filter | Phase A.1 step 2 audits these and either adds filter or documents exemption |
-| Migration breaks WA flow if `channel` column added with no default | Default to `'whatsapp'` in migration; verify with manual WA test post-deploy |
-| IG token refresh cron path overlaps with WA | Comments in cron job, separate functions, separate upserts |
-| Inbox filter returns 0 results if frontend sends wrong query param | Backend endpoint test in Phase F.2 step 5 |
+| Existing WA code references `user_number` without channel filter       | Phase A.1 step 2 audits these and either adds filter or documents exemption                                                                           |
+| Migration breaks WA flow if `channel` column added with no default     | Default to `'whatsapp'` in migration; verify with manual WA test post-deploy                                                                          |
+| IG token refresh cron path overlaps with WA                            | Comments in cron job, separate functions, separate upserts                                                                                            |
+| Inbox filter returns 0 results if frontend sends wrong query param     | Backend endpoint test in Phase F.2 step 5                                                                                                             |
 
 ## Out of scope (YAGNI, recorded for future)
 

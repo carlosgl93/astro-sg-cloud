@@ -16,7 +16,11 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <HeroText tagline="WhatsApp Business" title="WhatsApp Template Management" subtitle="Create, manage, and test your WhatsApp Business message templates." />
+  <HeroText
+    tagline="WhatsApp Business"
+    title="WhatsApp Template Management"
+    subtitle="Create, manage, and test your WhatsApp Business message templates."
+  />
 
   <section class="px-4 py-16 sm:px-6 lg:px-8 lg:py-20 mx-auto max-w-5xl">
     <TemplateManager client:load apiUrl={apiUrl} />

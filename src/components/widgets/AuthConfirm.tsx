@@ -50,7 +50,9 @@ export default function AuthConfirm({ locale = 'es' }: Props) {
       }
       setStatus('success');
       const dashboard = locale === 'en' ? '/en/dashboard' : '/dashboard';
-      setTimeout(() => { window.location.href = dashboard; }, 1500);
+      setTimeout(() => {
+        window.location.href = dashboard;
+      }, 1500);
     });
   }, []);
 
