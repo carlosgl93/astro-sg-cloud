@@ -6,6 +6,7 @@ interface Props {
   configId: string;
   locale?: 'es' | 'en';
   onSuccess?: () => void;
+  label?: string;
 }
 
 /** Config must be set; backend uses it for the FBL-style token exchange. */
@@ -48,7 +49,7 @@ const translations = {
  *   3. Wizard receives code, POSTs to /api/instagram/exchange with the same
  *      redirect_uri. Backend exchanges with Meta — values match, no 36008.
  */
-const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 'es', onSuccess }) => {
+const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 'es', onSuccess, label }) => {
   const t = translations[locale];
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -58,7 +59,7 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
+    const apiUrl = import.meta.env.PUBLIC_API_URL || 'https://whatsapp-api-250058155586.us-central1.run.app';
     const redirectUri = window.location.origin + (locale === 'en' ? '/en/' : '/') + 'instagram-callback';
     const body: Record<string, unknown> = {
       auth_code: code,
@@ -188,7 +189,7 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       class="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-pink-500 via-red-500-to-yellow-500 hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 shadow-lg"
       style="background: linear-gradient(to right, #ec4899, #ef4444, #f59e0b);"
     >
-      {status === 'loading' ? t.connecting : t.connect}
+      {status === 'loading' ? t.connecting : label || t.connect}
     </button>
   );
 };

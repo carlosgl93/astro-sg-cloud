@@ -3,6 +3,7 @@ import { supabase } from '~/lib/supabase';
 import AuthGuard from './AuthGuard';
 import FacebookSignupButton from './FacebookSignupButton';
 import InstagramSignupButton from './InstagramSignupButton';
+import MessengerSignupButton from './MessengerSignupButton';
 
 interface Props {
   apiUrl: string;
@@ -297,8 +298,16 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
               </div>
               <p class="text-sm text-gray-600 dark:text-gray-400">{tr.connectIgDesc}</p>
               {igConnected ? (
-                <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
-                  {tr.igConnected}
+                <div class="space-y-2">
+                  <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+                    {tr.igConnected}
+                  </div>
+                  <InstagramSignupButton
+                    configId={igConfigId}
+                    locale={locale}
+                    onSuccess={refreshConnections}
+                    label={locale === 'es' ? 'Reconectar Instagram' : 'Reconnect Instagram'}
+                  />
                 </div>
               ) : (
                 <InstagramSignupButton configId={igConfigId} locale={locale} onSuccess={refreshConnections} />
@@ -324,15 +333,19 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
               </div>
               <p class="text-sm text-gray-600 dark:text-gray-400">{tr.connectMessengerDesc}</p>
               {messengerConnected ? (
-                <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
-                  {tr.messengerConnected}
+                <div class="space-y-2">
+                  <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+                    {tr.messengerConnected}
+                  </div>
+                  <MessengerSignupButton
+                    configId={igConfigId}
+                    locale={locale}
+                    onSuccess={refreshConnections}
+                    label={locale === 'es' ? 'Reconectar Messenger' : 'Reconnect Messenger'}
+                  />
                 </div>
               ) : (
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {locale === 'es'
-                    ? 'Se vincula automáticamente con tu Página de Facebook al conectar tu cuenta de Meta.'
-                    : 'Automatically linked with your Facebook Page when connecting your Meta account.'}
-                </p>
+                <MessengerSignupButton configId={igConfigId} locale={locale} onSuccess={refreshConnections} />
               )}
             </div>
           </div>
