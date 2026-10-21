@@ -64,9 +64,6 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       auth_code: code,
       redirect_uri: redirectUri,
     };
-    if (hasConfigId(configId)) {
-      body.config_id = configId;
-    }
     const resp = await fetch(`${apiUrl}/api/instagram/exchange`, {
       method: 'POST',
       headers: {
@@ -83,11 +80,6 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
   };
 
   const handleClick = () => {
-    if (!hasConfigId(configId)) {
-      setErrorMessage('IG FBL config id is missing. Set PUBLIC_INSTAGRAM_CONFIG_ID.');
-      setStatus('error');
-      return;
-    }
     setStatus('loading');
     setErrorMessage('');
 
@@ -98,12 +90,12 @@ const InstagramSignupButton: FunctionalComponent<Props> = ({ configId, locale = 
       return;
     }
     const redirectUri = window.location.origin + (locale === 'en' ? '/en/' : '/') + 'instagram-callback';
+    const scopes = 'pages_show_list,pages_messaging,pages_manage_metadata,instagram_basic,instagram_manage_messages';
     const params = new URLSearchParams({
       client_id: appId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'instagram_manage_engagement,pages_messaging',
-      config_id: configId,
+      scope: scopes,
     });
     const oauthUrl = `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
 
