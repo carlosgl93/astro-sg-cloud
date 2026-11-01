@@ -178,7 +178,9 @@ We will let You know via email and/or a prominent notice on Our Service, prior t
 
 You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
 
-## User Data Deletion Instructions {#deletion}
+<div id="deletion"></div>
+
+## User Data Deletion Instructions
 
 In accordance with Meta Platform Terms and data privacy regulations, SG Cloud provides users and business tenants with straightforward mechanisms to request the deletion of their personal data and connected channel assets.
 
