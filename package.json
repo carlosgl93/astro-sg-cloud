@@ -1,7 +1,7 @@
 {
-  "name": "sg-cloud-portfolio",
+  "name": "sg-cloud-web",
   "version": "1.0.0",
-  "description": "SG Cloud - Tech consultancy portfolio built with Astro 5.0, Tailwind CSS, and Firebase",
+  "description": "SG Cloud - AI Business Chatbots Web Platform (Astro 5 + Preact + Tailwind)",
   "type": "module",
   "engines": {
     "node": "^18.17.1 || ^20.3.0 || >= 21.0.0"

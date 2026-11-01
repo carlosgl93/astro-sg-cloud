@@ -9,9 +9,9 @@ site:
 # Default SEO metadata
 metadata:
   title:
-    default: SG Cloud - Tech Consultancy
+    default: SG Cloud — AI Business Chatbots
     template: '%s — SG Cloud'
-  description: 'Tech consultancy specializing in modern web solutions, AI development, and automation. We build websites, apps, PWAs, scrapers, bots, AI models, and chatbots.'
+  description: 'AI Business Chatbots platform for WhatsApp, Facebook Messenger, and Instagram. Automate customer support, sales, and FAQs with multi-tenant RAG.'
   robots:
     index: true
     follow: true

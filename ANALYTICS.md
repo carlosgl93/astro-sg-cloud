@@ -67,7 +67,7 @@ import { trackEvent } from '~/utils/analytics';
 trackEvent('click_whatsapp', { label: 'conversations_page' });
 
 // With a value
-trackEvent('handoff_initiated', { label: 'cubrejardin', value: 1 });
+trackEvent('handoff_initiated', { label: 'default_tenant', value: 1 });
 ```
 
 ## 6. Key reports to watch in GA4
