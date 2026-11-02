@@ -69,9 +69,12 @@ const t = {
     method: 'Método',
     handoffActive: 'Handoff activo — hablas directo con el cliente',
     handoffBadge: 'En vivo',
-    closeHandoff: 'Cerrar handoff',
-    closeHandoffConfirm: '¿Cerrar handoff? El bot retomará la conversación.',
+    botActive: 'Bot activo — enviar un mensaje pausará el bot y activará el modo asesor',
+    botActiveBadge: 'Bot activo',
+    closeHandoff: 'Cerrar handoff / Reactivar bot',
+    closeHandoffConfirm: '¿Cerrar atención? El bot retomará la conversación automáticamente.',
     replyPlaceholder: 'Escribe tu respuesta...',
+    replyBotPlaceholder: 'Escribe una respuesta para pausar el bot y hablar...',
     send: 'Enviar',
     newHandoff: (n: string) => `Nuevo handoff de +${n}`,
     tabConversations: 'Conversaciones',
@@ -117,9 +120,12 @@ const t = {
     method: 'Method',
     handoffActive: 'Active handoff — talking directly with customer',
     handoffBadge: 'Live',
-    closeHandoff: 'Close handoff',
-    closeHandoffConfirm: 'Close handoff? The bot will resume.',
+    botActive: 'Bot active — sending a message will pause the bot and switch to human agent',
+    botActiveBadge: 'Bot active',
+    closeHandoff: 'Close handoff / Resume bot',
+    closeHandoffConfirm: 'Close handoff? The bot will resume conversations.',
     replyPlaceholder: 'Type your reply...',
+    replyBotPlaceholder: 'Type a message to pause the bot and reply...',
     send: 'Send',
     newHandoff: (n: string) => `New handoff from +${n}`,
     tabConversations: 'Conversations',
@@ -414,29 +420,79 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   }, [channelFilter, tenantId]);
 
   async function sendReply() {
-    if (!reply.trim() || !activeHandoff || !accessToken || !selected) return;
+    if (!reply.trim() || !accessToken || !selected) return;
     const text = reply.trim();
+    const contact = contacts.find((c) => c.channel_user_id === selected);
+    const channel = contact?.channel || 'whatsapp';
+
     setSending(true);
     setReply('');
+
+    // Optimistic UI update
+    const optimisticMsg: Message = {
+      id: Date.now(),
+      channel_user_id: selected,
+      role: 'assistant',
+      message: text,
+      metadata: { source: 'human_agent' },
+      created_at: new Date().toISOString(),
+      channel: channel,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     try {
-      await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/reply`, {
+      const res = await fetch(`${API_BASE}/api/conversations/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({
+          channel: channel,
+          channel_user_id: selected,
+          message: text,
+        }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.handoff_id) {
+          setHandoffs((prev) => {
+            const exists = prev.some((h) => h.id === data.handoff_id);
+            if (exists) {
+              return prev.map((h) => (h.id === data.handoff_id ? { ...h, status: 'active' } : h));
+            }
+            return [
+              {
+                id: data.handoff_id,
+                whatsapp_number: selected,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              ...prev,
+            ];
+          });
+        }
+      }
     } finally {
       setSending(false);
     }
   }
 
   async function closeHandoff() {
-    if (!activeHandoff || !accessToken) return;
+    if (!selected || !accessToken) return;
     if (!confirm(tr.closeHandoffConfirm)) return;
-    await fetch(`${API_BASE}/api/handoffs/${activeHandoff.id}/close`, {
+    const contact = contacts.find((c) => c.channel_user_id === selected);
+    const channel = contact?.channel || 'whatsapp';
+
+    await fetch(`${API_BASE}/api/conversations/resume-bot`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({
+        channel: channel,
+        channel_user_id: selected,
+      }),
     });
-    setHandoffs((prev) => prev.map((h) => (h.id === activeHandoff.id ? { ...h, status: 'closed' } : h)));
+    setHandoffs((prev) =>
+      prev.map((h) => (h.whatsapp_number === selected && h.status === 'active' ? { ...h, status: 'closed' } : h))
+    );
   }
 
   const filtered = contacts.filter((c) => {
@@ -716,10 +772,23 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                 </div>
               ) : (
                 <>
-                  {activeHandoff && (
-                    <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-2 flex-shrink-0">
-                      <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
-                      <p class="text-xs text-green-700 dark:text-green-400">{tr.handoffActive}</p>
+                  {activeHandoff ? (
+                    <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center justify-between gap-2 flex-shrink-0">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
+                        <p class="text-xs text-green-700 dark:text-green-400 truncate">{tr.handoffActive}</p>
+                      </div>
+                      <button
+                        onClick={closeHandoff}
+                        class="px-2.5 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/40 dark:text-red-300 rounded-lg transition-colors flex-shrink-0"
+                      >
+                        {tr.closeHandoff}
+                      </button>
+                    </div>
+                  ) : (
+                    <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 flex items-center gap-2 flex-shrink-0">
+                      <span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                      <p class="text-xs text-blue-700 dark:text-blue-300">{tr.botActive}</p>
                     </div>
                   )}
                   <div class="flex-1 overflow-y-auto p-4 space-y-3">
@@ -762,34 +831,32 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
                     })}
                     <div ref={threadEndRef} />
                   </div>
-                  {activeHandoff && (
-                    <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
-                      <div class="flex items-end gap-2">
-                        <input
-                          type="text"
-                          value={reply}
-                          onInput={(e) => setReply((e.target as HTMLInputElement).value)}
-                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendReply()}
-                          placeholder={tr.replyPlaceholder}
-                          disabled={sending}
-                          class="flex-1 px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-                        />
-                        <button
-                          onClick={sendReply}
-                          disabled={sending || !reply.trim()}
-                          class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {sending ? (
-                            <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          ) : (
-                            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
+                  <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+                    <div class="flex items-end gap-2">
+                      <input
+                        type="text"
+                        value={reply}
+                        onInput={(e) => setReply((e.target as HTMLInputElement).value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendReply()}
+                        placeholder={activeHandoff ? tr.replyPlaceholder : tr.replyBotPlaceholder}
+                        disabled={sending}
+                        class="flex-1 px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                      />
+                      <button
+                        onClick={sendReply}
+                        disabled={sending || !reply.trim()}
+                        class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {sending ? (
+                          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </>
               )}
             </div>
