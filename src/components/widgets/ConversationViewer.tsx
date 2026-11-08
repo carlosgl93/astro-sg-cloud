@@ -542,14 +542,6 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
             <h1 class="font-semibold text-base dark:text-white">{tr.title}</h1>
           )}
         </div>
-        {showThread && activeHandoff && tab === 'conversations' && (
-          <button
-            onClick={closeHandoff}
-            class="flex-shrink-0 px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-          >
-            {tr.closeHandoff}
-          </button>
-        )}
       </div>
 
       {/* Tabs */}
