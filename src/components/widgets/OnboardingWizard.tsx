@@ -16,6 +16,8 @@ interface BotConfig {
   system_prompt: string | null;
   greeting: string | null;
   handoff_trigger: string | null;
+  handoff_auto_return_enabled: boolean;
+  handoff_timeout_minutes: number;
 }
 
 const t = {
@@ -54,6 +56,12 @@ const t = {
     handoffLabel: 'Frase para transferir a humano',
     handoffPlaceholder: 'hablar con una persona, agente, humano',
     handoffHint: 'Si el cliente escribe algo similar, el bot transferirá la conversación a un agente.',
+    autoReturnTitle: 'Reactivación automática del bot',
+    autoReturnToggle: 'Reactivar bot tras inactividad del asesor',
+    autoReturnDesc:
+      'Si una conversación queda en modo asesor humano y pasan varios minutos sin respuesta, el bot retoma el control automáticamente ante el siguiente mensaje.',
+    autoReturnMinutesLabel: 'Tiempo de espera (minutos)',
+    autoReturnMinutesHint: 'Minutos de inactividad requeridos para cerrar el handoff y reactivar el bot (ej. 10).',
     doneTitle: '¡Todo listo!',
     doneDesc: 'Tu bot está configurado y listo para responder mensajes de WhatsApp.',
     goToConversations: 'Ver conversaciones →',
@@ -95,6 +103,12 @@ const t = {
     handoffLabel: 'Human handoff phrase',
     handoffPlaceholder: 'talk to a person, agent, human',
     handoffHint: 'If the customer writes something similar, the bot will transfer the conversation to a human agent.',
+    autoReturnTitle: 'Automatic bot resumption',
+    autoReturnToggle: 'Resume bot after human agent inactivity',
+    autoReturnDesc:
+      'If a conversation is in human agent mode and no reply is sent for several minutes, the bot will automatically resume answering customer messages.',
+    autoReturnMinutesLabel: 'Timeout duration (minutes)',
+    autoReturnMinutesHint: 'Inactivity minutes before closing handoff and resuming bot (e.g. 10).',
     doneTitle: 'All set!',
     doneDesc: 'Your bot is configured and ready to respond to WhatsApp messages.',
     goToConversations: 'View conversations →',
@@ -123,7 +137,13 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
   const [waConnected, setWaConnected] = useState(false);
   const [igConnected, setIgConnected] = useState(false);
   const [messengerConnected, setMessengerConnected] = useState(false);
-  const [config, setConfig] = useState<BotConfig>({ system_prompt: null, greeting: null, handoff_trigger: null });
+  const [config, setConfig] = useState<BotConfig>({
+    system_prompt: null,
+    greeting: null,
+    handoff_trigger: null,
+    handoff_auto_return_enabled: true,
+    handoff_timeout_minutes: 10,
+  });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -178,6 +198,14 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
             system_prompt: data.system_prompt || '',
             greeting: data.greeting || '',
             handoff_trigger: data.handoff_trigger || '',
+            handoff_auto_return_enabled:
+              data.handoff_auto_return_enabled !== undefined
+                ? Boolean(data.handoff_auto_return_enabled)
+                : true,
+            handoff_timeout_minutes:
+              typeof data.handoff_timeout_minutes === 'number'
+                ? data.handoff_timeout_minutes
+                : 10,
           });
         }
       } catch {
@@ -428,6 +456,54 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
               class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <p class="text-xs text-gray-400">{tr.handoffHint}</p>
+          </div>
+
+          <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 space-y-4">
+            <div>
+              <h4 class="text-sm font-semibold dark:text-white">{tr.autoReturnTitle}</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{tr.autoReturnDesc}</p>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.handoff_auto_return_enabled}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    handoff_auto_return_enabled: (e.target as HTMLInputElement).checked,
+                  })
+                }
+                class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-slate-900"
+              />
+              <span class="text-sm font-medium dark:text-gray-200">{tr.autoReturnToggle}</span>
+            </label>
+
+            {config.handoff_auto_return_enabled && (
+              <div class="space-y-1 pl-7">
+                <label class="block text-xs font-medium dark:text-gray-300">
+                  {tr.autoReturnMinutesLabel}
+                </label>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={config.handoff_timeout_minutes || 10}
+                    onInput={(e) => {
+                      const val = parseInt((e.target as HTMLInputElement).value, 10);
+                      setConfig({
+                        ...config,
+                        handoff_timeout_minutes: isNaN(val) ? 10 : Math.max(1, val),
+                      });
+                    }}
+                    class="w-28 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <span class="text-xs text-gray-500 dark:text-gray-400">min</span>
+                </div>
+                <p class="text-xs text-gray-400">{tr.autoReturnMinutesHint}</p>
+              </div>
+            )}
           </div>
 
           {saveError && <p class="text-sm text-red-500">{saveError}</p>}
