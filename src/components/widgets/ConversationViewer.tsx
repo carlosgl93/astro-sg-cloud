@@ -321,13 +321,26 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
             setContacts(buildContacts(next));
             return next;
           });
+
+          // If bot responded, deactivate handoff for this contact immediately
+          if (msg.role === 'assistant' && msg.metadata?.source !== 'human_agent') {
+            setHandoffs((prev) =>
+              prev.filter((h) => !(h.whatsapp_number === msg.channel_user_id && h.status === 'active'))
+            );
+            if (accessToken) {
+              fetch(`${API_BASE}/api/handoffs/`, { headers: { Authorization: `Bearer ${accessToken}` } })
+                .then((r) => (r.ok ? r.json() : []))
+                .then(setHandoffs)
+                .catch(() => {});
+            }
+          }
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [tenantId]);
+  }, [tenantId, accessToken]);
 
   // Realtime: handoffs
   useEffect(() => {
@@ -343,7 +356,9 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
             setHandoffs((prev) => [h, ...prev.filter((x) => x.id !== h.id)]);
             triggerNotification(tr.newHandoff(h.whatsapp_number), h.whatsapp_number);
           } else if (payload.eventType === 'UPDATE') {
-            setHandoffs((prev) => prev.map((x) => (x.id === h.id ? h : x)));
+            setHandoffs((prev) =>
+              h.status !== 'active' ? prev.filter((x) => x.id !== h.id) : prev.map((x) => (x.id === h.id ? h : x))
+            );
             if (h.status !== 'active') {
               setHistory((prev) => [h, ...prev.filter((x) => x.id !== h.id)]);
               // refresh stats
@@ -366,6 +381,16 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
   useEffect(() => {
     if (!activeHandoff || !tenantId || !selected) return;
     const poll = async () => {
+      // Refresh active handoffs to catch auto-expiration or closure
+      if (accessToken) {
+        fetch(`${API_BASE}/api/handoffs/`, { headers: { Authorization: `Bearer ${accessToken}` } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((freshHandoffs) => {
+            if (freshHandoffs) setHandoffs(freshHandoffs);
+          })
+          .catch(() => {});
+      }
+
       const latest = messages.filter((m) => m.channel_user_id === selected).at(-1);
       const since = latest?.created_at ?? new Date(0).toISOString();
       const { data } = await supabase
@@ -376,11 +401,16 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
         .gt('created_at', since)
         .order('created_at', { ascending: true });
       if (data?.length) {
+        const fresh = data as Message[];
+        const hasBotReply = fresh.some((m) => m.role === 'assistant' && m.metadata?.source !== 'human_agent');
+        if (hasBotReply) {
+          setHandoffs((prev) => prev.filter((h) => !(h.whatsapp_number === selected && h.status === 'active')));
+        }
         setMessages((prev) => {
           const ids = new Set(prev.map((m) => m.id));
-          const fresh = (data as Message[]).filter((m) => !ids.has(m.id));
-          if (!fresh.length) return prev;
-          const next = [...prev, ...fresh];
+          const toAdd = fresh.filter((m) => !ids.has(m.id));
+          if (!toAdd.length) return prev;
+          const next = [...prev, ...toAdd];
           setContacts(buildContacts(next));
           return next;
         });
@@ -388,7 +418,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
     };
     const id = setInterval(poll, 4000);
     return () => clearInterval(id);
-  }, [activeHandoff?.id, selected, tenantId]);
+  }, [activeHandoff?.id, selected, tenantId, accessToken]);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -490,9 +520,7 @@ function ConversationViewerContent({ locale = 'es' }: Props) {
         channel_user_id: selected,
       }),
     });
-    setHandoffs((prev) =>
-      prev.map((h) => (h.whatsapp_number === selected && h.status === 'active' ? { ...h, status: 'closed' } : h))
-    );
+    setHandoffs((prev) => prev.filter((h) => !(h.whatsapp_number === selected && h.status === 'active')));
   }
 
   const filtered = contacts.filter((c) => {
