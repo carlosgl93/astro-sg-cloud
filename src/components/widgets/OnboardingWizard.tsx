@@ -18,6 +18,12 @@ interface BotConfig {
   handoff_trigger: string | null;
   handoff_auto_return_enabled: boolean;
   handoff_timeout_minutes: number;
+  notify_email_enabled: boolean;
+  notify_email_recipient: string;
+  notify_whatsapp_enabled: boolean;
+  notify_whatsapp_recipient: string;
+  notify_conversion_alerts: boolean;
+  notify_handoff_alerts: boolean;
 }
 
 const t = {
@@ -62,6 +68,20 @@ const t = {
       'Si una conversación queda en modo asesor humano y pasan varios minutos sin respuesta, el bot retoma el control automáticamente ante el siguiente mensaje.',
     autoReturnMinutesLabel: 'Tiempo de espera (minutos)',
     autoReturnMinutesHint: 'Minutos de inactividad requeridos para cerrar el handoff y reactivar el bot (ej. 10).',
+    notificationsTitle: 'Alertas y Notificaciones',
+    notificationsDesc:
+      'Recibe notificaciones por Email o WhatsApp cuando ocurra una conversión o se solicite atención humana.',
+    notifyEmailToggle: 'Alertas por Email (Resend)',
+    notifyEmailRecipientLabel: 'Correo destinatario',
+    notifyEmailRecipientPlaceholder: 'alertas@tunegocio.com',
+    notifyEmailRecipientHint: 'Dirección de correo donde se enviarán las alertas.',
+    notifyWhatsappToggle: 'Alertas por WhatsApp',
+    notifyWhatsappRecipientLabel: 'Número de WhatsApp destinatario',
+    notifyWhatsappRecipientPlaceholder: '+56912345678',
+    notifyWhatsappRecipientHint: 'Número con código de país (formato E.164) para recibir alertas.',
+    notifyTriggersLabel: 'Eventos que disparan alertas',
+    notifyConversionToggle: 'Alertas de conversión (lead caliente o intención de compra)',
+    notifyHandoffToggle: 'Alertas de transferencia a humano (handoff o solicitud de ayuda)',
     doneTitle: '¡Todo listo!',
     doneDesc: 'Tu bot está configurado y listo para responder mensajes de WhatsApp.',
     goToConversations: 'Ver conversaciones →',
@@ -109,6 +129,20 @@ const t = {
       'If a conversation is in human agent mode and no reply is sent for several minutes, the bot will automatically resume answering customer messages.',
     autoReturnMinutesLabel: 'Timeout duration (minutes)',
     autoReturnMinutesHint: 'Inactivity minutes before closing handoff and resuming bot (e.g. 10).',
+    notificationsTitle: 'Alerts & Notifications',
+    notificationsDesc:
+      'Receive Email or WhatsApp notifications when a conversion happens or a human agent is requested.',
+    notifyEmailToggle: 'Email alerts (Resend)',
+    notifyEmailRecipientLabel: 'Recipient email',
+    notifyEmailRecipientPlaceholder: 'alerts@yourbusiness.com',
+    notifyEmailRecipientHint: 'Email address where alert notifications will be sent.',
+    notifyWhatsappToggle: 'WhatsApp alerts',
+    notifyWhatsappRecipientLabel: 'Recipient WhatsApp number',
+    notifyWhatsappRecipientPlaceholder: '+56912345678',
+    notifyWhatsappRecipientHint: 'Phone number with country code (E.164 format) to receive alerts.',
+    notifyTriggersLabel: 'Events that trigger alerts',
+    notifyConversionToggle: 'Conversion alerts (hot lead or purchase intent)',
+    notifyHandoffToggle: 'Human handoff alerts (escalation or help request)',
     doneTitle: 'All set!',
     doneDesc: 'Your bot is configured and ready to respond to WhatsApp messages.',
     goToConversations: 'View conversations →',
@@ -143,6 +177,12 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
     handoff_trigger: null,
     handoff_auto_return_enabled: true,
     handoff_timeout_minutes: 10,
+    notify_email_enabled: false,
+    notify_email_recipient: '',
+    notify_whatsapp_enabled: false,
+    notify_whatsapp_recipient: '',
+    notify_conversion_alerts: true,
+    notify_handoff_alerts: true,
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -199,13 +239,15 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
             greeting: data.greeting || '',
             handoff_trigger: data.handoff_trigger || '',
             handoff_auto_return_enabled:
-              data.handoff_auto_return_enabled !== undefined
-                ? Boolean(data.handoff_auto_return_enabled)
-                : true,
+              data.handoff_auto_return_enabled !== undefined ? Boolean(data.handoff_auto_return_enabled) : true,
             handoff_timeout_minutes:
-              typeof data.handoff_timeout_minutes === 'number'
-                ? data.handoff_timeout_minutes
-                : 10,
+              typeof data.handoff_timeout_minutes === 'number' ? data.handoff_timeout_minutes : 10,
+            notify_email_enabled: Boolean(data.notify_email_enabled),
+            notify_email_recipient: data.notify_email_recipient || '',
+            notify_whatsapp_enabled: Boolean(data.notify_whatsapp_enabled),
+            notify_whatsapp_recipient: data.notify_whatsapp_recipient || '',
+            notify_conversion_alerts: Boolean(data.notify_conversion_alerts ?? true),
+            notify_handoff_alerts: Boolean(data.notify_handoff_alerts ?? true),
           });
         }
       } catch {
@@ -228,10 +270,15 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
     if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 
     try {
+      const payload = {
+        ...config,
+        notify_email_recipient: config.notify_email_recipient.trim() || null,
+        notify_whatsapp_recipient: config.notify_whatsapp_recipient.trim() || null,
+      };
       const resp = await fetch(`${apiUrl}/api/tenants/config`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       });
       if (!resp.ok) throw new Error(await resp.text());
       setSaveSuccess(true);
@@ -256,6 +303,43 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
       '[OnboardingWizard] PUBLIC_INSTAGRAM_CONFIG_ID is unset; using standard OAuth (no FBL config_id). Set it in .env to force the FBL popup path.'
     );
   }
+
+  const notificationChannels: Array<{
+    enabledKey: 'notify_email_enabled' | 'notify_whatsapp_enabled';
+    recipientKey: 'notify_email_recipient' | 'notify_whatsapp_recipient';
+    toggleLabel: string;
+    recipientLabel: string;
+    placeholder: string;
+    hint: string;
+    inputType: 'email' | 'tel';
+  }> = [
+    {
+      enabledKey: 'notify_email_enabled',
+      recipientKey: 'notify_email_recipient',
+      toggleLabel: tr.notifyEmailToggle,
+      recipientLabel: tr.notifyEmailRecipientLabel,
+      placeholder: tr.notifyEmailRecipientPlaceholder,
+      hint: tr.notifyEmailRecipientHint,
+      inputType: 'email',
+    },
+    {
+      enabledKey: 'notify_whatsapp_enabled',
+      recipientKey: 'notify_whatsapp_recipient',
+      toggleLabel: tr.notifyWhatsappToggle,
+      recipientLabel: tr.notifyWhatsappRecipientLabel,
+      placeholder: tr.notifyWhatsappRecipientPlaceholder,
+      hint: tr.notifyWhatsappRecipientHint,
+      inputType: 'tel',
+    },
+  ];
+
+  const alertTriggers: Array<{
+    key: 'notify_conversion_alerts' | 'notify_handoff_alerts';
+    label: string;
+  }> = [
+    { key: 'notify_conversion_alerts', label: tr.notifyConversionToggle },
+    { key: 'notify_handoff_alerts', label: tr.notifyHandoffToggle },
+  ];
 
   return (
     <div class="max-w-2xl mx-auto px-4 py-8">
@@ -481,9 +565,7 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
 
             {config.handoff_auto_return_enabled && (
               <div class="space-y-1 pl-7">
-                <label class="block text-xs font-medium dark:text-gray-300">
-                  {tr.autoReturnMinutesLabel}
-                </label>
+                <label class="block text-xs font-medium dark:text-gray-300">{tr.autoReturnMinutesLabel}</label>
                 <div class="flex items-center gap-2">
                   <input
                     type="number"
@@ -504,6 +586,71 @@ function WizardContent({ apiUrl, locale = 'es' }: Props) {
                 <p class="text-xs text-gray-400">{tr.autoReturnMinutesHint}</p>
               </div>
             )}
+          </div>
+
+          <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 space-y-4">
+            <div>
+              <h4 class="text-sm font-semibold dark:text-white">{tr.notificationsTitle}</h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{tr.notificationsDesc}</p>
+            </div>
+
+            {notificationChannels.map((ch) => (
+              <div key={ch.enabledKey} class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config[ch.enabledKey]}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        [ch.enabledKey]: (e.target as HTMLInputElement).checked,
+                      })
+                    }
+                    class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-slate-900"
+                  />
+                  <span class="text-sm font-medium dark:text-gray-200">{ch.toggleLabel}</span>
+                </label>
+
+                {config[ch.enabledKey] && (
+                  <div class="space-y-1 pl-7">
+                    <label class="block text-xs font-medium dark:text-gray-300">{ch.recipientLabel}</label>
+                    <input
+                      type={ch.inputType}
+                      value={config[ch.recipientKey]}
+                      onInput={(e) =>
+                        setConfig({
+                          ...config,
+                          [ch.recipientKey]: (e.target as HTMLInputElement).value,
+                        })
+                      }
+                      placeholder={ch.placeholder}
+                      class="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <p class="text-xs text-gray-400">{ch.hint}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2.5">
+              <p class="text-xs font-medium dark:text-gray-300">{tr.notifyTriggersLabel}</p>
+              {alertTriggers.map((trigger) => (
+                <label key={trigger.key} class="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config[trigger.key]}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        [trigger.key]: (e.target as HTMLInputElement).checked,
+                      })
+                    }
+                    class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-slate-900"
+                  />
+                  <span class="text-sm dark:text-gray-200">{trigger.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {saveError && <p class="text-sm text-red-500">{saveError}</p>}
